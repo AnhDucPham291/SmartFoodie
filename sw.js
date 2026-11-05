@@ -1,12 +1,14 @@
-const CACHE_NAME = 'smartfoodie-shell-v4';
+const CACHE_NAME = 'smartfoodie-shell-v6';
 const SHELL_FILES = [
   './',
   './index.html',
   './style.css',
+  './data.js',
+  './pricing.js',
+  './assistant.js',
   './app.js',
   './healthy-foods.js',
-  './restaurants.js',
-  './leafy-background.svg',
+  './nearby.js',
   './manifest.webmanifest',
   './favicon.svg'
 ];
@@ -26,7 +28,9 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const request = event.request;
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  // Only same-origin GETs; never cache the AI assistant API.
+  if (request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).then(response => {
@@ -37,11 +41,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(response => {
+  // Network first so edits show up immediately; the cache is only an offline fallback.
+  event.respondWith(fetch(request).then(response => {
     if (response.ok) {
       const copy = response.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
     }
     return response;
-  })));
+  }).catch(() => caches.match(request)));
 });

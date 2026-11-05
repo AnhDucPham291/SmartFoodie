@@ -1,12 +1,12 @@
 {
-  "name": "SmartFoodie — Good food, less thinking",
+  "name": "SmartFoodie — Order food you'll love",
   "short_name": "SmartFoodie",
-  "description": "Find meals and restaurants that fit your taste, budget, and day.",
+  "description": "Order from local favorites, filter by cuisine, and let the AI assistant build your order with tax included.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#fbf6eb",
-  "theme_color": "#e85f3d",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "./favicon.svg",

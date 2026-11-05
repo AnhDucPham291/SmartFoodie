@@ -2,82 +2,336 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#e85f3d" />
-  <meta name="description" content="SmartFoodie helps you find delicious meals that fit your taste, budget, and schedule." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="SmartFoodie: order from local favorites, filter by cuisine, and let the AI assistant build your order with tax included." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <title>SmartFoodie — Good food, less thinking</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>SmartFoodie — Order food you'll love</title>
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://overpass-api.de">
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+  <link rel="dns-prefetch" href="https://api.zippopotam.us">
+  <link rel="dns-prefetch" href="https://tile.openstreetmap.org">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="intro-screen" id="introScreen" aria-label="Welcome to SmartFoodie">
-    <div class="intro-grain"></div><div class="intro-orbit orbit-a"></div><div class="intro-orbit orbit-b"></div>
-    <div class="intro-layout">
-      <div class="intro-content"><div class="intro-brand"><span class="intro-symbol">✳</span><span>MADE FOR THE LOVE OF FOOD</span></div><h1 class="intro-wordmark">Smart<span>Foodie</span><i>.</i></h1><p class="intro-tagline">A little taste of <em>everywhere.</em></p><div class="intro-caption"><span></span>Vietnamese favorites, global cravings, all in one place.</div></div>
-      <div class="intro-food-scene" aria-hidden="true"><div class="food-glow"></div><div class="food-frame frame-back"><img src="https://images.unsplash.com/photo-1637806931098-af30b519be53?auto=format&fit=crop&w=700&q=85" alt=""></div><div class="food-frame frame-front"><img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=1000&q=90" alt=""></div><div class="food-frame frame-side"><img src="https://www.vietnamairlines.com/content/dam/legacy-site-assets/SEO-images/2025%20SEO/Traffic%20TA/MB/broken-rice-vietnam/broken-rice-consists-of-rice-as-the-main-ingredient-accompanied-by-dishes-such-as-grilled-meat-and-eggs.jpg" alt=""></div><span class="ingredient ingredient-chili">🌶</span><span class="ingredient ingredient-herb">✳</span><span class="ingredient ingredient-citrus">●</span><span class="scene-label label-top">FRESHLY PICKED <b>✦</b></span><span class="scene-label label-bottom">A WORLD OF FLAVOR</span></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5" fill="currentColor"/></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5.5 7.5h13l-1 12.5h-11Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.5a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.2 2.7 5.5 6 .9-4.35 4.25 1.03 6L12 17l-5.38 2.85 1.03-6L3.3 9.6l6-.9Z" fill="currentColor"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+      <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2.5 13.9 8 19.5 10l-5.6 2L12 17.5 10.1 12 4.5 10l5.6-2ZM18.5 15l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9Z" fill="currentColor"/></symbol>
+      <symbol id="i-qr" viewBox="0 0 24 24"><path d="M4 4h6v6H4ZM14 4h6v6h-6ZM4 14h6v6H4Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 14h2v2h-2ZM18 18h2v2h-2ZM18 14h2v2h-2ZM14 18h2v2h-2Z" fill="currentColor"/></symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.1a4.3 4.3 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-5.5 16-3-6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-scooter" viewBox="0 0 24 24"><circle cx="6" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 17h7M14 6h2.5l2 8.5M13 11h-5l-2 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16v.5a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 10ZM5.5 12.5V20h13v-7.5M10 20v-4.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3ZM9 8h6M9 12h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="topbar" id="top">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="SmartFoodie home"><span class="brand-mark">s.</span><span class="brand-name">SmartFoodie<i>.</i></span></a>
+      <div class="mode-toggle" role="group" aria-label="Order type">
+        <button type="button" data-mode="delivery" aria-pressed="true">Delivery</button>
+        <button type="button" data-mode="pickup" aria-pressed="false">Pickup</button>
+      </div>
+      <button type="button" class="address-chip" id="addressChip" aria-label="Set your ZIP code for tax and nearby restaurants">
+        <svg class="icon"><use href="#i-pin"/></svg><span id="addressLabel">Set ZIP</span>
+      </button>
+      <div class="search" id="globalSearch">
+        <svg class="icon search-icon"><use href="#i-search"/></svg>
+        <input id="searchInput" type="search" placeholder="Search dishes, restaurants, or cuisines" autocomplete="off" spellcheck="false"
+          role="combobox" aria-label="Search dishes, restaurants, or cuisines" aria-autocomplete="list" aria-expanded="false" aria-controls="searchResults" enterkeyhint="search">
+        <kbd class="search-kbd" aria-hidden="true">/</kbd>
+        <div class="search-results" id="searchResults" role="listbox" aria-label="Search suggestions" hidden></div>
+      </div>
+      <button type="button" class="icon-button share-button" id="openShareQr" aria-label="Share SmartFoodie"><svg class="icon"><use href="#i-qr"/></svg></button>
+      <button type="button" class="cart-button" id="cartButton" aria-label="Open your order">
+        <svg class="icon"><use href="#i-bag"/></svg><span class="cart-count" id="cartCount">0</span><span class="cart-button-total" id="cartButtonTotal"></span>
+      </button>
     </div>
-    <button class="intro-skip" id="skipIntro">Skip intro <span>↗</span></button>
-  </div>
-  <header class="site-header">
-    <a class="brand" href="#home" aria-label="SmartFoodie home"><span class="brand-mark">s.</span><span>SmartFoodie<i>.</i></span></a>
-    <nav class="main-nav" aria-label="Main navigation"><a class="selected" href="#discover">Discover</a><a href="#restaurant-directory">Restaurants</a><a href="#how-it-works">How it works</a><a href="#about">About</a></nav>
-    <div class="header-actions"><button class="share-link" id="openShareQr">Share <span>▦</span></button><button class="header-order" id="headerOrder">Your order <span class="header-count" id="headerCount">0</span></button></div>
   </header>
-  <div class="food-transition" id="foodTransition" aria-hidden="true"><div class="food-transition-grid"><div><img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=900&q=85" alt=""></div><div><img src="https://www.vietnamairlines.com/content/dam/legacy-site-assets/SEO-images/2025%20SEO/Traffic%20TA/MB/broken-rice-vietnam/broken-rice-consists-of-rice-as-the-main-ingredient-accompanied-by-dishes-such-as-grilled-meat-and-eggs.jpg" alt=""></div><div><img src="https://images.unsplash.com/photo-1637806931098-af30b519be53?auto=format&fit=crop&w=900&q=85" alt=""></div><div><img src="https://images.unsplash.com/photo-1565753445646-1fe473522242?auto=format&fit=crop&w=900&q=85" alt=""></div><div><img src="https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=900&q=85" alt=""></div><div><img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=85" alt=""></div></div><span class="food-transition-caption">A LITTLE TASTE OF WHAT'S NEXT</span></div>
-  <main id="home">
-    <section class="hero" id="discover">
-      <div class="hero-copy"><p class="eyebrow"><span></span> YOUR NEXT GREAT MEAL STARTS HERE</p><h1>Good food.<br><em>Less thinking.</em></h1><p class="hero-description">Tell us what you're craving. We'll find a few delicious options that fit your taste, budget, and busy day.</p>
-        <div class="hero-actions"><a class="primary-button" href="#recommendations">Find my meal <span>↗</span></a><span class="time-note"><b>✳</b> Your shortlist in under a minute</span></div>
-        <div class="hero-stats"><div><strong>3–5</strong><span>thoughtful picks</span></div><i></i><div><strong>Your way</strong><span>taste and budget</span></div><i></i><div><strong>Less scrolling</strong><span>more enjoying</span></div></div>
+
+  <nav class="category-rail" aria-label="Filter by cuisine">
+    <div class="rail-scroll" id="categoryRail" role="tablist"></div>
+  </nav>
+
+  <main id="main">
+    <section class="promo-row" aria-label="Highlights">
+      <button type="button" class="promo-card promo-ai" data-promo="ai">
+        <span class="promo-eyebrow"><svg class="icon"><use href="#i-spark"/></svg> AI ordering assistant</span>
+        <strong>Just say what you're craving</strong>
+        <span class="promo-text">"Dinner for 3 under $50" or "thêm 2 phở". It builds the order and shows the total with tax.</span>
+        <span class="promo-cta">Ask AI</span>
+      </button>
+      <button type="button" class="promo-card promo-new" data-promo="new">
+        <span class="promo-eyebrow">Just added</span>
+        <strong>20 new dishes</strong>
+        <span class="promo-text">Ramen, biryani, soup dumplings, paella, and more, with photos, ratings, and reviews.</span>
+        <span class="promo-cta">See what's new</span>
+      </button>
+      <button type="button" class="promo-card promo-near" data-promo="nearby">
+        <span class="promo-eyebrow"><svg class="icon"><use href="#i-pin"/></svg> Real places around you</span>
+        <strong>Restaurants near you</strong>
+        <span class="promo-text">Search by ZIP or your location and see places on a live map.</span>
+        <span class="promo-cta">Open map</span>
+      </button>
+    </section>
+
+    <div class="filter-bar" id="filterBar" role="group" aria-label="Refine dishes">
+      <label class="sort-select"><span class="sr-only">Sort dishes</span>
+        <select id="sortSelect">
+          <option value="recommended">Sort: Recommended</option>
+          <option value="rating">Sort: Highest rated</option>
+          <option value="price">Sort: Price, low to high</option>
+          <option value="fastest">Sort: Fastest</option>
+        </select>
+      </label>
+      <button type="button" class="chip" data-chip="top" aria-pressed="false"><svg class="icon"><use href="#i-star"/></svg> 4.8+</button>
+      <button type="button" class="chip" data-chip="under15" aria-pressed="false">Under $15</button>
+      <button type="button" class="chip" data-chip="fast" aria-pressed="false"><svg class="icon"><use href="#i-clock"/></svg> 15 min or less</button>
+      <button type="button" class="chip" data-chip="vegetarian" aria-pressed="false">Vegetarian</button>
+      <button type="button" class="chip" data-chip="spicy" aria-pressed="false">Spicy</button>
+      <button type="button" class="chip" data-chip="new" aria-pressed="false">New</button>
+      <button type="button" class="chip chip-clear" id="clearFilters" hidden>Clear all</button>
+    </div>
+
+    <section class="section" id="restaurants" aria-labelledby="restaurantsTitle">
+      <div class="section-head">
+        <div><h2 id="restaurantsTitle">Featured restaurants</h2><p class="section-sub" id="restaurantsSub">Tap a restaurant to see its full menu and reviews.</p></div>
+        <div class="scroller-nav"><button type="button" class="round-button" data-scroll="restaurantRow" data-dir="-1" aria-label="Scroll restaurants left"><svg class="icon"><use href="#i-left"/></svg></button><button type="button" class="round-button" data-scroll="restaurantRow" data-dir="1" aria-label="Scroll restaurants right"><svg class="icon"><use href="#i-right"/></svg></button></div>
       </div>
-      <div class="hero-art" aria-hidden="true"><div class="art-ring ring-one"></div><div class="art-ring ring-two"></div><div class="food-plate"><div class="plate-food"><img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=500&q=80" alt=""></div></div><div class="art-sticker sticker-one">Made for your mood <b>✦</b></div><div class="art-sticker sticker-two"><span>★</span> Fresh ideas daily</div><span class="art-leaf leaf-one">✳</span><span class="art-leaf leaf-two">✳</span></div>
+      <div class="h-scroller" id="restaurantRow"></div>
     </section>
-    <section class="restaurant-directory" id="restaurant-directory" aria-labelledby="restaurantDirectoryTitle">
-      <div class="directory-heading"><div><p class="eyebrow dark-eyebrow">QUICK BITES & ASIAN FAVORITES</p><h2 id="restaurantDirectoryTitle">10 places to find your next favorite</h2><p>Browse quick-service classics and Asian comfort food, with sample menus and customer feedback.</p></div><div class="directory-tools"><span class="directory-count">10 restaurants</span><div class="carousel-buttons"><button id="restaurantsPrevious" type="button" aria-label="Previous restaurants">‹</button><button id="restaurantsNext" type="button" aria-label="Next restaurants">›</button></div></div></div>
-      <div class="restaurant-directory-grid" id="restaurantDirectoryGrid"></div>
-      <p class="directory-disclaimer">Demo listings: restaurant names, customer feedback, star ratings, prices, and preparation times are sample estimates, not live business information.</p>
-    </section>
-    <section class="healthy-section" id="healthy-foods" aria-labelledby="healthyTitle">
-      <div class="healthy-heading"><div><p class="eyebrow dark-eyebrow">GOOD FOR YOU, FROM EVERYWHERE</p><h2 id="healthyTitle">A world of feel-good food</h2><p>Explore 39 dishes from around the world, including fresh, healthy American favorites, each shown with a food photo.</p></div><div class="healthy-count"><div><strong id="healthyCount">39</strong><span>pictured dishes<br>to discover</span></div><small><b id="healthySavedCount">0</b> saved</small></div></div>
-      <div class="healthy-controls"><label class="healthy-search"><span>⌕</span><input id="healthySearch" type="search" placeholder="Search dishes or countries" aria-label="Search dishes or countries"></label><div class="healthy-filters" role="group" aria-label="Filter dishes by food style"><button type="button" class="active" data-filter="all">All dishes <span>39</span></button><button type="button" data-filter="Plant-based">Plant-based</button><button type="button" data-filter="Seafood">Seafood</button><button type="button" data-filter="Lean protein">Lean protein</button><button type="button" data-filter="Whole grains">Whole grains</button></div></div>
-      <div class="healthy-grid" id="healthyGrid"></div><div class="healthy-empty" id="healthyEmpty" hidden>No dishes found. Try another name, country, or filter.</div><button class="load-more" id="loadMoreHealthy">Show more dishes <span>↓</span></button>
-      <p class="healthy-note">These are inspiration ideas, not medical nutrition advice. Ingredients and nutrition vary by recipe and portion; adapt meals to your needs, allergies, and preferences. Dietary labels describe common preparations. Only dishes with food photographs are included. <a href="https://www.who.int/en/news-room/fact-sheets/detail/healthy-diet" target="_blank" rel="noreferrer">Learn about balanced diets</a>.</p>
-    </section>
-    <section class="order-workspace" id="recommendations">
-      <div class="workspace-main">
-        <div class="section-heading"><div><p class="eyebrow dark-eyebrow">A LITTLE HELP DECIDING</p><h2>What sounds good today?</h2></div><div class="budget-pill" id="budgetPill"><span>YOUR BUDGET</span><b>$<i id="budgetLabel">25</i></b><button class="edit-budget" id="budgetButton" type="button">Edit</button><form class="budget-editor" id="budgetEditor" hidden><label class="sr-only" for="budgetInput">Your budget in dollars</label><span>$</span><input id="budgetInput" type="number" min="1" step="0.01" inputmode="decimal" value="25" required><button type="submit">Save</button><button class="cancel-budget" id="cancelBudgetEdit" type="button" aria-label="Cancel budget edit">×</button></form></div></div>
-        <div class="preference-panel"><div class="preference-label"><span class="assistant-avatar">✳</span><div><strong>Your SmartFoodie AI meal assistant</strong><small>Tell me how you feel, what you're craving, your budget, or how much time you have.</small></div></div><form class="composer" id="chatForm"><input id="promptInput" placeholder="e.g. I'm tired and want something warm under $20…" autocomplete="off"/><button class="send" aria-label="Get meal recommendations">Find ideas <span>↗</span></button></form><div class="quick-picks"><span>Try:</span><button type="button">Quick lunch</button><button type="button">Something fresh</button><button type="button">Under $15</button><button type="button">Surprise me</button></div></div>
-        <div class="recommendation-heading"><div><h3 id="recommendationTitle">A few picks for you</h3><p id="recommendationSub">Thoughtful choices, so you can spend less time deciding.</p></div><span class="match">✦ PERSONALIZED</span></div>
-        <div class="meal-filter-bar" aria-label="Filter meal recommendations"><label class="meal-filter-search"><span>⌕</span><input id="mealSearch" type="search" placeholder="Search a dish or craving"></label><select id="cuisineFilter" aria-label="Filter by cuisine"><option value="all">All cuisines</option><option>Vietnamese</option><option>Thai</option><option>Japanese</option><option>Italian</option><option>Mexican</option><option>Indian</option><option>Indonesian</option></select><select id="dietFilter" aria-label="Filter by diet"><option value="all">Any diet</option><option value="plant">Plant-based</option><option value="vegetarian">Vegetarian</option><option value="seafood">Seafood</option><option value="meat">Meat</option></select><select id="priceFilter" aria-label="Filter by maximum price"><option value="all">Any price</option><option value="15">Up to $15</option><option value="20">Up to $20</option></select><select id="timeFilter" aria-label="Filter by preparation time"><option value="all">Any time</option><option value="20">20 min or less</option><option value="30">30 min or less</option></select><button type="button" id="clearMealFilters">Clear</button></div>
-        <div class="meal-filter-status" id="mealFilterStatus" aria-live="polite">Showing all meal ideas</div>
-        <div class="meal-grid">
-          <article class="meal-card" data-price="14"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&w=900&q=85" alt="A bowl of Vietnamese beef pho with fresh herbs" loading="lazy"><span class="photo-tag">VIETNAM · FAVORITE</span><button class="favorite" aria-label="Save Pho">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Pho</h3><span class="rating">★ 4.9 <small>(214)</small></span></div><p>Slow-simmered broth, rice noodles, fresh herbs</p><div class="meal-meta"><strong>$14</strong><span>◷ 20 min</span><span>Vietnamese</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Pho to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="13"><div class="meal-photo"><img src="https://www.vietnamairlines.com/content/dam/legacy-site-assets/SEO-images/2025%20SEO/Traffic%20TA/MB/broken-rice-vietnam/broken-rice-consists-of-rice-as-the-main-ingredient-accompanied-by-dishes-such-as-grilled-meat-and-eggs.jpg" alt="Com Tam broken rice with grilled pork, egg, and vegetables" loading="lazy"><span class="photo-tag">VIETNAM · SAIGON</span><button class="favorite" aria-label="Save Com Tam">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Com Tam</h3><span class="rating">★ 4.8 <small>(187)</small></span></div><p>Broken rice, grilled pork, egg, pickled vegetables</p><div class="meal-meta"><strong>$13</strong><span>◷ 20 min</span><span>Vietnamese</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Com Tam to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="15"><div class="meal-photo"><img src="https://cdn2.tuoitre.vn/ttnew/r/2024/04/01/hue-10-1711960135.jpg" alt="Bun Bo Hue spicy beef noodle soup with herbs" loading="lazy"><span class="photo-tag">VIETNAM · HUE</span><button class="favorite" aria-label="Save Bun Bo Hue">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Bun Bo Hue</h3><span class="rating">★ 4.9 <small>(146)</small></span></div><p>Spicy lemongrass broth, beef, rice noodles</p><div class="meal-meta"><strong>$15</strong><span>◷ 25 min</span><span>Vietnamese</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Bun Bo Hue to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="16"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1637806931098-af30b519be53?auto=format&fit=crop&w=900&q=85" alt="Pad Thai noodles with lime and fresh herbs" loading="lazy"><span class="photo-tag">THAILAND</span><button class="favorite" aria-label="Save Pad Thai">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Pad Thai</h3><span class="rating">★ 4.8 <small>(201)</small></span></div><p>Stir-fried noodles, peanuts, lime, bean sprouts</p><div class="meal-meta"><strong>$16</strong><span>◷ 20 min</span><span>Thai</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Pad Thai to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="18"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1565753445646-1fe473522242?auto=format&fit=crop&w=900&q=85" alt="Japanese sashimi rice bowl with fresh fish" loading="lazy"><span class="photo-tag">JAPAN</span><button class="favorite" aria-label="Save Chirashi Sushi Bowl">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Chirashi Sushi Bowl</h3><span class="rating">★ 4.9 <small>(173)</small></span></div><p>Sushi rice topped with fresh, colorful sashimi</p><div class="meal-meta"><strong>$18</strong><span>◷ 20 min</span><span>Japanese</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Chirashi Sushi Bowl to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="14"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1734769774783-78ddeed93751?auto=format&fit=crop&w=900&q=85" alt="Penne pasta in tomato sauce with herbs" loading="lazy"><span class="photo-tag">ITALY</span><button class="favorite" aria-label="Save Penne Pomodoro">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Penne Pomodoro</h3><span class="rating">★ 4.7 <small>(132)</small></span></div><p>Tomato sauce, basil, parmesan</p><div class="meal-meta"><strong>$14</strong><span>◷ 18 min</span><span>Italian</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Penne Pomodoro to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="13"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=900&q=85" alt="Mexican tacos topped with cilantro and lime" loading="lazy"><span class="photo-tag">MEXICO</span><button class="favorite" aria-label="Save Street Tacos">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Street Tacos</h3><span class="rating">★ 4.8 <small>(196)</small></span></div><p>Seasoned filling, corn tortillas, cilantro, lime</p><div class="meal-meta"><strong>$13</strong><span>◷ 15 min</span><span>Mexican</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Street Tacos to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="17"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1710091691771-96b2e6d17dac?auto=format&fit=crop&w=900&q=85" alt="Indian chicken curry with rice and fresh herbs" loading="lazy"><span class="photo-tag">INDIA</span><button class="favorite" aria-label="Save Butter Chicken">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Butter Chicken</h3><span class="rating">★ 4.8 <small>(188)</small></span></div><p>Tomato cream curry, fragrant rice, cilantro</p><div class="meal-meta"><strong>$17</strong><span>◷ 25 min</span><span>Indian</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Butter Chicken to order">Add to order <b>+</b></button></div></div></article>
-          <article class="meal-card" data-price="13"><div class="meal-photo"><img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=85" alt="Indonesian gado-gado vegetable and tofu bowl" loading="lazy"><span class="photo-tag">INDONESIA</span><button class="favorite" aria-label="Save Gado-Gado">♡</button></div><div class="meal-info"><div class="meal-heading"><h3>Gado-Gado</h3><span class="rating">★ 4.8 <small>(124)</small></span></div><p>Vegetables, tofu, tempeh, peanut dressing</p><div class="meal-meta"><strong>$13</strong><span>◷ 20 min</span><span>Indonesian</span></div><div class="meal-actions"><button class="details-button">Why this fits <span>↗</span></button><button class="add-button" aria-label="Add Gado-Gado to order">Add to order <b>+</b></button></div></div></article>
-        </div><p class="meal-empty" id="mealEmpty" hidden>No meals match your filters. Try changing your search or preferences.</p><div id="chatResponse" class="chat-response" aria-live="polite"></div>
+
+    <section class="section" id="new-dishes" aria-labelledby="newTitle">
+      <div class="section-head">
+        <div><h2 id="newTitle">New on SmartFoodie</h2><p class="section-sub">20 dishes just added from around the world.</p></div>
+        <div class="scroller-nav"><button type="button" class="round-button" data-scroll="newRow" data-dir="-1" aria-label="Scroll new dishes left"><svg class="icon"><use href="#i-left"/></svg></button><button type="button" class="round-button" data-scroll="newRow" data-dir="1" aria-label="Scroll new dishes right"><svg class="icon"><use href="#i-right"/></svg></button></div>
       </div>
-      <aside class="order-sidebar"><div class="sidebar-title"><div><span class="eyebrow dark-eyebrow">READY WHEN YOU ARE</span><h3>Your order</h3></div><span class="cart-icon">▢<i id="cartCount">0</i></span></div><div id="cartItems" class="cart-items"><div class="empty-cart"><span>✳</span><strong>Your next favorite starts here.</strong><p>Add a meal and we'll keep your order together.</p></div></div><div class="cart-summary"><div><span>Meal subtotal</span><b id="spentLabel">$0</b></div><div class="budget-remaining"><span>Budget remaining</span><b id="leftLabel">$25</b></div><div class="estimated-total"><span>Estimated food total</span><strong id="estimatedTotal">$0</strong><small>Based on menu prices. Taxes and delivery are not included.</small></div></div></aside>
+      <div class="h-scroller dish-row" id="newRow"></div>
     </section>
-    <section class="how-section" id="how-it-works"><p class="eyebrow dark-eyebrow">A BETTER WAY TO PICK LUNCH</p><h2>Less overwhelm. More <em>yum.</em></h2><div class="steps"><div><span>01</span><h3>Tell us what you like</h3><p>Share a craving, your budget, or how much time you have.</p></div><div><span>02</span><h3>Get a thoughtful shortlist</h3><p>Explore a few dishes picked to fit your day and your taste.</p></div><div><span>03</span><h3>Enjoy something delicious</h3><p>Choose your favorite and get back to the things you love.</p></div></div></section>
+
+    <section class="section" id="dishes" aria-labelledby="dishesTitle">
+      <div class="section-head">
+        <div><h2 id="dishesTitle">All dishes</h2><p class="section-sub" id="dishesSub" aria-live="polite"></p></div>
+      </div>
+      <div class="dish-grid" id="dishGrid"></div>
+      <div class="empty-state" id="dishEmpty" hidden>
+        <strong>No dishes match these filters</strong>
+        <p>Try another cuisine, remove a filter, or ask the AI assistant for ideas.</p>
+        <button type="button" class="button button-secondary" id="emptyClear">Clear filters</button>
+      </div>
+    </section>
+
+    <section class="section nearby-section" id="nearby" aria-labelledby="nearbyTitle">
+      <div class="section-head">
+        <div><h2 id="nearbyTitle">Restaurants near you</h2><p class="section-sub">Real places from OpenStreetMap. Enter a ZIP code or city, or use your location.</p></div>
+        <span class="count-pill" id="nearbyCount">0 places</span>
+      </div>
+      <div class="nearby-controls">
+        <form class="nearby-search" id="nearbyForm" role="search">
+          <label class="field field-grow"><svg class="icon"><use href="#i-search"/></svg><input id="nearbyQuery" type="search" placeholder="ZIP code, city, or address (e.g. 94103)" aria-label="ZIP code, city, or address" autocomplete="postal-code" enterkeyhint="search"></label>
+          <label class="field field-select"><span class="sr-only">Search radius</span><select id="nearbyRadius" aria-label="Search radius"><option value="0.5">0.5 mi</option><option value="1" selected>1 mi</option><option value="2">2 mi</option><option value="5">5 mi</option></select></label>
+          <button type="submit" class="button button-primary">Search</button>
+        </form>
+        <button type="button" class="button button-secondary" id="nearbyLocate"><svg class="icon"><use href="#i-locate"/></svg> Use my location</button>
+      </div>
+      <div class="nearby-toolbar">
+        <div class="chip-group" id="nearbyFilters" role="group" aria-label="Filter nearby places by type">
+          <button type="button" class="chip" aria-pressed="true" data-type="all">All <span>0</span></button>
+          <button type="button" class="chip" aria-pressed="false" data-type="restaurant">Restaurants <span>0</span></button>
+          <button type="button" class="chip" aria-pressed="false" data-type="fast_food">Fast food <span>0</span></button>
+          <button type="button" class="chip" aria-pressed="false" data-type="cafe">Cafés <span>0</span></button>
+        </div>
+        <label class="field field-compact"><svg class="icon"><use href="#i-search"/></svg><input id="nearbyFilterText" type="search" placeholder="Filter by name or cuisine" aria-label="Filter nearby places by name or cuisine"></label>
+      </div>
+      <p class="nearby-status" id="nearbyStatus" role="status" aria-live="polite" data-tone="info">Search a ZIP code or share your location to get started.</p>
+      <div class="nearby-layout">
+        <div class="nearby-map-wrap"><div class="nearby-map" id="nearbyMap" aria-label="Map of nearby restaurants"></div></div>
+        <ol class="nearby-list" id="nearbyList"><li class="nearby-empty"><svg class="icon"><use href="#i-pin"/></svg><strong>Your neighborhood, on the menu</strong><p>Results show up here, closest first. Select a place to find it on the map.</p></li></ol>
+      </div>
+      <p class="fine-print">Places come from OpenStreetMap contributors and may be incomplete or out of date. Check hours with the restaurant before you go. Your location is only used in your browser to run this search. Recent searches are cached on this device so repeat searches load instantly.</p>
+    </section>
+
+    <section class="section" id="world" aria-labelledby="worldTitle">
+      <div class="section-head">
+        <div><h2 id="worldTitle">World dishes to explore</h2><p class="section-sub"><span id="worldCount">39</span> dishes for inspiration · <b id="worldSavedCount">0</b> saved</p></div>
+        <label class="field field-compact"><svg class="icon"><use href="#i-search"/></svg><input id="worldSearch" type="search" placeholder="Search dishes or countries" aria-label="Search world dishes or countries"></label>
+      </div>
+      <div class="chip-group world-filters" role="group" aria-label="Filter world dishes by food style">
+        <button type="button" class="chip" aria-pressed="true" data-world-filter="all">All</button>
+        <button type="button" class="chip" aria-pressed="false" data-world-filter="Plant-based">Plant-based</button>
+        <button type="button" class="chip" aria-pressed="false" data-world-filter="Seafood">Seafood</button>
+        <button type="button" class="chip" aria-pressed="false" data-world-filter="Lean protein">Lean protein</button>
+        <button type="button" class="chip" aria-pressed="false" data-world-filter="Whole grains">Whole grains</button>
+      </div>
+      <div class="world-grid" id="worldGrid"></div>
+      <div class="empty-state" id="worldEmpty" hidden><strong>No dishes found</strong><p>Try another name, country, or filter.</p></div>
+      <p class="fine-print">These are inspiration ideas, not medical nutrition advice. Ingredients and nutrition vary by recipe and portion. <a href="https://www.who.int/en/news-room/fact-sheets/detail/healthy-diet" target="_blank" rel="noreferrer">Learn about balanced diets</a>.</p>
+    </section>
   </main>
-  <footer id="about"><a class="brand footer-brand" href="#home"><span class="brand-mark">s.</span><span>SmartFoodie<i>.</i></span></a><span>GOOD FOOD, LESS THINKING.</span><span>MADE FOR BUSY DAYS & BIG APPETITES</span></footer>
-  <dialog class="share-dialog" id="shareDialog" aria-labelledby="shareTitle"><button class="dialog-close" id="closeShareQr" aria-label="Close">×</button><span class="qr-icon">▦</span><h2 id="shareTitle">Share SmartFoodie</h2><p>Scan this code to open the website in any browser.</p><div class="qr-code" id="shareQrCode"></div><code id="shareUrl"></code><div class="qr-actions"><button id="copySiteLink">Copy link</button><button id="downloadQr" class="qr-download">Download QR</button></div><small id="qrHint">This code uses the website address currently open in your browser.</small></dialog>
-  <dialog class="feedback-dialog" id="feedbackDialog" aria-labelledby="feedbackRestaurantName"><button class="dialog-close" id="closeFeedbackDialog" aria-label="Close reviews">×</button><p class="eyebrow dark-eyebrow">SAMPLE CUSTOMER FEEDBACK</p><h2 id="feedbackRestaurantName">Restaurant reviews</h2><p class="feedback-summary" id="feedbackSummary"></p><div class="feedback-list" id="feedbackList"></div><small class="feedback-disclaimer">These names and reviews are fictional examples for the website preview.</small></dialog>
-  <div class="toast" id="toast" role="status"></div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="brand" href="#top"><span class="brand-mark">s.</span><span class="brand-name">SmartFoodie<i>.</i></span></a>
+      <p>Demo website: restaurant names, menus, prices, ratings, and customer reviews are sample data. Orders are not sent to restaurants and no payment is taken. Sales tax is estimated from statewide base rates for prepared food; local taxes may apply.</p>
+    </div>
+  </footer>
+
+  <!-- Dish details -->
+  <dialog class="modal dish-modal" id="dishDialog" aria-labelledby="dishDialogTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body" id="dishDialogBody"></div>
+  </dialog>
+
+  <!-- Restaurant menu -->
+  <dialog class="modal restaurant-modal" id="restaurantDialog" aria-labelledby="restaurantDialogTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body" id="restaurantDialogBody"></div>
+  </dialog>
+
+  <!-- Cart drawer -->
+  <dialog class="drawer" id="cartDrawer" aria-labelledby="cartTitle">
+    <div class="drawer-head">
+      <h2 id="cartTitle">Your order</h2>
+      <button type="button" class="modal-close static" data-close aria-label="Close your order"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="drawer-body" id="cartBody"></div>
+    <div class="drawer-foot" id="cartFoot"></div>
+  </dialog>
+
+  <!-- Checkout -->
+  <dialog class="modal checkout-modal" id="checkoutDialog" aria-labelledby="checkoutTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close checkout"><svg class="icon"><use href="#i-close"/></svg></button>
+    <form class="checkout" id="checkoutForm" novalidate>
+      <div class="checkout-main">
+        <h2 id="checkoutTitle">Checkout</h2>
+        <fieldset class="checkout-block">
+          <legend>How do you want it?</legend>
+          <div class="segmented" role="group" aria-label="Order type">
+            <button type="button" data-checkout-mode="delivery"><svg class="icon"><use href="#i-scooter"/></svg> Delivery</button>
+            <button type="button" data-checkout-mode="pickup"><svg class="icon"><use href="#i-store"/></svg> Pickup</button>
+          </div>
+        </fieldset>
+        <fieldset class="checkout-block" id="deliveryFields">
+          <legend>Delivery address</legend>
+          <div class="form-grid">
+            <label class="form-field span-2"><span>Street address</span><input id="checkoutStreet" autocomplete="street-address" placeholder="123 Main St, Apt 4"></label>
+            <label class="form-field"><span>ZIP code</span><input id="checkoutZip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="94103"></label>
+            <label class="form-field"><span>State (for tax)</span><select id="checkoutState"></select></label>
+            <label class="form-field span-2"><span>Note for the driver <small>(optional)</small></span><input id="checkoutNote" placeholder="Gate code, leave at door…"></label>
+          </div>
+          <p class="field-hint" id="zipHint" aria-live="polite"></p>
+        </fieldset>
+        <fieldset class="checkout-block" id="pickupFields" hidden>
+          <legend>Pickup</legend>
+          <div class="form-grid">
+            <label class="form-field"><span>State (for tax)</span><select id="pickupState"></select></label>
+          </div>
+          <p class="field-hint" id="pickupInfo"></p>
+        </fieldset>
+        <fieldset class="checkout-block" id="tipFields">
+          <legend>Tip your driver</legend>
+          <div class="tip-options" id="tipOptions" role="group" aria-label="Tip amount"></div>
+          <p class="field-hint">100% of the tip goes to your driver. You can change it before placing the order.</p>
+        </fieldset>
+        <fieldset class="checkout-block">
+          <legend>Payment</legend>
+          <div class="pay-demo"><svg class="icon"><use href="#i-check"/></svg><div><strong>Pay at the door or counter</strong><small>Demo checkout. No card details are collected and nothing is charged.</small></div></div>
+        </fieldset>
+      </div>
+      <aside class="checkout-summary">
+        <h3>Order summary</h3>
+        <div id="checkoutItems" class="summary-items"></div>
+        <div id="checkoutTotals" class="totals"></div>
+        <p class="form-error" id="checkoutError" role="alert" hidden></p>
+        <button type="submit" class="button button-primary button-block" id="placeOrderButton">Place order</button>
+        <p class="fine-print">Sales tax uses the statewide base rate for prepared food on your food subtotal. Local taxes may make the final amount slightly higher.</p>
+      </aside>
+    </form>
+  </dialog>
+
+  <!-- Order confirmation -->
+  <dialog class="modal confirm-modal" id="confirmDialog" aria-labelledby="confirmTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body" id="confirmBody"></div>
+  </dialog>
+
+  <!-- ZIP / tax location -->
+  <dialog class="modal small-modal" id="addressDialog" aria-labelledby="addressTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <form class="modal-body address-form" id="addressForm">
+      <h2 id="addressTitle">Where are you ordering?</h2>
+      <p class="muted">Your ZIP code sets the sales tax and can search restaurants near you.</p>
+      <label class="form-field"><span>ZIP code</span><input id="addressZip" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="94103"></label>
+      <label class="form-field"><span>Or choose a state</span><select id="addressState"></select></label>
+      <p class="field-hint" id="addressHint" aria-live="polite"></p>
+      <label class="check-row"><input type="checkbox" id="addressNearby" checked> Also show restaurants near this ZIP</label>
+      <button type="submit" class="button button-primary button-block">Save</button>
+    </form>
+  </dialog>
+
+  <!-- Share -->
+  <dialog class="modal small-modal share-dialog" id="shareDialog" aria-labelledby="shareTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body share-body">
+      <h2 id="shareTitle">Share SmartFoodie</h2>
+      <p class="muted">Scan this code to open the website in any browser.</p>
+      <div class="qr-code" id="shareQrCode"></div>
+      <code id="shareUrl"></code>
+      <div class="share-actions"><button type="button" class="button button-secondary" id="copySiteLink">Copy link</button><button type="button" class="button button-primary" id="downloadQr">Download QR</button></div>
+      <small class="muted" id="qrHint">This code uses the website address currently open in your browser.</small>
+    </div>
+  </dialog>
+
+  <!-- AI assistant -->
+  <button type="button" class="ai-fab" id="aiFab" aria-controls="aiPanel" aria-expanded="false"><svg class="icon"><use href="#i-spark"/></svg><span>Ask AI</span></button>
+  <section class="ai-panel" id="aiPanel" role="dialog" aria-modal="false" aria-labelledby="aiTitle" hidden>
+    <header class="ai-head">
+      <span class="ai-avatar"><svg class="icon"><use href="#i-spark"/></svg></span>
+      <div><h2 id="aiTitle">SmartFoodie AI</h2><span class="ai-status" id="aiStatus">On-device assistant</span></div>
+      <button type="button" class="icon-button" id="aiClose" aria-label="Close assistant"><svg class="icon"><use href="#i-close"/></svg></button>
+    </header>
+    <div class="ai-messages" id="aiMessages" aria-live="polite"></div>
+    <div class="ai-suggestions" id="aiSuggestions"></div>
+    <form class="ai-composer" id="aiForm">
+      <label class="sr-only" for="aiInput">Message the AI assistant</label>
+      <input id="aiInput" autocomplete="off" placeholder='Try "add 2 pho" or "spicy under $15"' enterkeyhint="send">
+      <button type="submit" class="ai-send" aria-label="Send"><svg class="icon"><use href="#i-send"/></svg></button>
+    </form>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js" defer></script>
+  <script src="pricing.js" defer></script>
+  <script src="assistant.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="healthy-foods.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-  <script src="healthy-foods.js"></script>
-  <script src="restaurants.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="nearby.js" defer></script>
 </body>
 </html>
