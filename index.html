@@ -114,6 +114,7 @@
       <button type="button" class="chip" data-chip="vegetarian" aria-pressed="false">Vegetarian</button>
       <button type="button" class="chip" data-chip="spicy" aria-pressed="false">Spicy</button>
       <button type="button" class="chip" data-chip="new" aria-pressed="false">New</button>
+      <button type="button" class="chip" data-chip="best" aria-pressed="false">Best sellers</button>
       <button type="button" class="chip chip-clear" id="clearFilters" hidden>Clear all</button>
     </div>
 
@@ -137,7 +138,7 @@
       <div class="section-head">
         <div><h2 id="dishesTitle">All dishes</h2><p class="section-sub" id="dishesSub" aria-live="polite"></p></div>
       </div>
-      <div class="dish-grid" id="dishGrid"></div>
+      <div class="course-rows" id="dishRows"></div>
       <div class="empty-state" id="dishEmpty" hidden>
         <strong>No dishes match these filters</strong>
         <p>Try another cuisine, remove a filter, or ask the AI assistant for ideas.</p>
@@ -177,8 +178,8 @@
 
     <section class="section" id="world" aria-labelledby="worldTitle">
       <div class="section-head">
-        <div><h2 id="worldTitle">World dishes to explore</h2><p class="section-sub"><span id="worldCount">39</span> dishes for inspiration · <b id="worldSavedCount">0</b> saved</p></div>
-        <label class="field field-compact"><svg class="icon"><use href="#i-search"/></svg><input id="worldSearch" type="search" placeholder="Search dishes or countries" aria-label="Search world dishes or countries"></label>
+        <div><h2 id="worldTitle">World dishes to explore</h2><p class="section-sub"><span id="worldCount">39</span> famous dishes you can order here, with price, restaurant, and reviews · <b id="worldSavedCount">0</b> saved</p></div>
+        <label class="field field-compact"><svg class="icon"><use href="#i-search"/></svg><input id="worldSearch" type="search" placeholder="Search dishes, countries, or restaurants" aria-label="Search world dishes, countries, or restaurants"></label>
       </div>
       <div class="chip-group world-filters" role="group" aria-label="Filter world dishes by food style">
         <button type="button" class="chip" aria-pressed="true" data-world-filter="all">All</button>
@@ -187,7 +188,7 @@
         <button type="button" class="chip" aria-pressed="false" data-world-filter="Lean protein">Lean protein</button>
         <button type="button" class="chip" aria-pressed="false" data-world-filter="Whole grains">Whole grains</button>
       </div>
-      <div class="world-grid" id="worldGrid"></div>
+      <div class="course-rows" id="worldRows"></div>
       <div class="empty-state" id="worldEmpty" hidden><strong>No dishes found</strong><p>Try another name, country, or filter.</p></div>
       <p class="fine-print">These are inspiration ideas, not medical nutrition advice. Ingredients and nutrition vary by recipe and portion. <a href="https://www.who.int/en/news-room/fact-sheets/detail/healthy-diet" target="_blank" rel="noreferrer">Learn about balanced diets</a>.</p>
     </section>
@@ -325,6 +326,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <script src="menu-data.js" defer></script>
   <script src="data.js" defer></script>
   <script src="pricing.js" defer></script>
   <script src="assistant.js" defer></script>

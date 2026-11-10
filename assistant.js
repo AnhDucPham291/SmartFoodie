@@ -21,18 +21,29 @@
 
   // Generic words that could mean several dishes; the assistant asks which one.
   const GENERIC_ALIASES = {
-    'tacos': ['street-tacos', 'carnitas-tacos', 'chicken-taco-pair'],
-    'taco': ['street-tacos', 'carnitas-tacos', 'chicken-taco-pair'],
-    'curry': ['red-curry', 'butter-chicken', 'tikka-masala', 'chana-masala'],
-    'cari': ['red-curry', 'butter-chicken', 'tikka-masala', 'chana-masala'],
-    'burger': ['cheeseburger', 'smash-burger'],
-    'burgers': ['cheeseburger', 'smash-burger'],
-    'fried chicken': ['two-piece-meal', 'korean-fried-chicken'],
-    'ga ran': ['two-piece-meal', 'korean-fried-chicken'],
-    'sushi': ['salmon-sushi-set', 'chirashi'],
+    'tacos': ['street-tacos', 'carnitas-tacos', 'chicken-taco-pair', 'birria-tacos', 'fish-tacos'],
+    'taco': ['street-tacos', 'carnitas-tacos', 'chicken-taco-pair', 'birria-tacos', 'fish-tacos'],
+    'curry': ['red-curry', 'green-curry', 'massaman-curry', 'butter-chicken', 'tikka-masala', 'rogan-josh'],
+    'cari': ['red-curry', 'green-curry', 'massaman-curry', 'butter-chicken', 'tikka-masala', 'rogan-josh'],
+    'burger': ['cheeseburger', 'smash-burger', 'bacon-bbq-burger', 'mushroom-swiss-burger'],
+    'burgers': ['cheeseburger', 'smash-burger', 'bacon-bbq-burger', 'mushroom-swiss-burger'],
+    'fried chicken': ['two-piece-meal', 'korean-fried-chicken', 'karaage', 'nashville-hot-chicken'],
+    'ga ran': ['two-piece-meal', 'korean-fried-chicken', 'karaage'],
+    'sushi': ['salmon-sushi-set', 'chirashi', 'dragon-roll'],
+    'pizza': ['margherita', 'pepperoni-pizza'],
+    'dumplings': ['xiao-long-bao', 'gyoza', 'mandu', 'chili-wontons'],
+    'coffee': ['ca-phe-sua-da', 'thai-iced-coffee', 'cold-brew', 'cappuccino'],
+    'iced coffee': ['ca-phe-sua-da', 'thai-iced-coffee', 'cold-brew'],
+    'milk tea': ['boba-milk-tea', 'hk-milk-tea', 'thai-iced-tea'],
+    'tra sua': ['boba-milk-tea', 'hk-milk-tea', 'thai-iced-tea'],
+    'milkshake': ['vanilla-shake', 'chocolate-shake', 'banana-shake'],
+    'lemonade': ['strawberry-lemonade', 'peach-lemonade', 'mint-lemonade'],
+    'nuoc chanh': ['strawberry-lemonade', 'peach-lemonade', 'mint-lemonade', 'nimbu-soda'],
+    'smoothie': ['berry-smoothie', 'sinh-to-bo', 'mango-lassi'],
+    'sinh to': ['sinh-to-bo', 'berry-smoothie', 'mango-lassi'],
     'chicken': [],
     'noodles': [],
-    'pasta': ['penne-pomodoro', 'bolognese']
+    'pasta': ['penne-pomodoro', 'bolognese', 'carbonara', 'lasagna', 'fettuccine-alfredo']
   };
 
   function buildAliasIndex(dishes) {
@@ -131,7 +142,9 @@
     { key: 'rice', pattern: /\b(rice|com|bowl)\b/, tags: ['Rice', 'Bowl'] },
     { key: 'fried', pattern: /\b(fried|crispy|crunchy|chien|ran|gion)\b/, tags: ['Fried'] },
     { key: 'grill', pattern: /\b(grill|grilled|bbq|barbecue|nuong)\b/, tags: ['Grill', 'BBQ'] },
-    { key: 'snack', pattern: /\b(snack|appetizer|starter|an vat|khai vi)\b/, tags: ['Snack', 'Dumplings'] },
+    { key: 'snack', pattern: /\b(snacks?|appetizers?|starters?|sides?|an vat|khai vi|mon an kem)\b/, tags: ['Snack', 'Dumplings'] },
+    { key: 'drink', pattern: /\b(drinks?|beverages?|thirsty|coffee|tea|boba|smoothies?|shakes?|milkshakes?|juice|lemonade|soda|latte|do uong|nuoc uong|thuc uong|giai khat|ca phe|cafe|tra sua|tra da|tra chanh|sinh to|nuoc ep)\b/, tags: [] },
+    { key: 'dessert', pattern: /\b(desserts?|something sweet|sweet tooth|trang mieng|do ngot|banh ngot)\b/, tags: ['Dessert'] },
     { key: 'brunch', pattern: /\b(breakfast|brunch|bua sang|an sang)\b/, tags: ['Eggs', 'Brunch', 'Sandwich'] },
     { key: 'sandwich', pattern: /\b(sandwich|wrap|banh mi kep)\b/, tags: ['Sandwich', 'Wrap'] }
   ];
@@ -168,6 +181,7 @@
     });
     prefs.quick = /\b(quick|fast|hurry|busy|asap|nhanh|voi|gap)\b/.test(free);
     prefs.cheap = /\b(cheap|cheapest|affordable|value|re|tiet kiem)\b/.test(free);
+    prefs.best = /\b(best ?sellers?|bestsellers?|popular|most ordered|signature|ban chay|pho bien|noi tieng|mon tu)\b/.test(free);
     prefs.surprise = /\b(surprise|anything|whatever|random|gi cung duoc|bat ky|tuy ban)\b/.test(free);
     return prefs;
   }
@@ -197,13 +211,23 @@
     if (prefs.quick) score += (25 - dish.prep) * 0.12;
     if (prefs.cheap) score += (20 - dish.price) * 0.15;
     if (prefs.surprise) score += seeded(dish.id) * 3;
+    if (dish.bestSeller) score += prefs.best ? 4 : 0.2;
+    // Starters and desserts only lead the list when someone asks for them.
+    if (dish.course === 'appetizer' && !prefs.moods.includes('snack')) score -= 1.5;
     return score;
   }
+
+  // Drinks and desserts are suggested only when asked for; otherwise recommendations are food.
+  const courseAllows = (dish, prefs) => {
+    if (prefs.moods.includes('drink')) return dish.course === 'drink';
+    if (prefs.moods.includes('dessert')) return dish.course === 'dessert';
+    return dish.course !== 'drink' && dish.course !== 'dessert';
+  };
 
   // Applies hard filters, relaxing cuisine first and time second if nothing matches.
   function candidateDishes(dishes, prefs, { usePrice = true } = {}) {
     const notes = [];
-    const base = dishes.filter(dish => dietAllows(dish, prefs.diet) && !(prefs.spicy < 0 && dish.spicy > 1));
+    const base = dishes.filter(dish => courseAllows(dish, prefs) && dietAllows(dish, prefs.diet) && !(prefs.spicy < 0 && dish.spicy > 1));
     let pool = base;
     if (prefs.cuisines.length) {
       const inCuisine = pool.filter(dish => prefs.cuisines.includes(dish.cuisine));
@@ -239,7 +263,9 @@
   function planMeal(dishes, prefs, ctx) {
     const people = Math.min(6, prefs.people || 2);
     const budgetCents = prefs.maxPrice ? Math.round(prefs.maxPrice * 100) : null;
-    const { pool } = candidateDishes(dishes, prefs, { usePrice: false });
+    // A meal plan gives each person a main; drinks and starters can be added on top.
+    const mains = dishes.filter(dish => dish.course === 'main');
+    const { pool } = candidateDishes(mains.length ? mains : dishes, { ...prefs, moods: prefs.moods.filter(mood => mood !== 'drink') }, { usePrice: false });
     const byRestaurant = new Map();
     pool.forEach(dish => {
       if (!byRestaurant.has(dish.restaurantId)) byRestaurant.set(dish.restaurantId, []);
@@ -408,7 +434,9 @@
     const { dishes: picks, notes } = recommend(ctx.dishes, prefs, 3);
     result.dishIds = picks.map(dish => dish.id);
     let opening = t('Here are a few tasty matches:', 'Đây là vài món hợp với yêu cầu của bạn:');
-    if (prefs.moods.includes('comfort')) opening = t('A cozy, comforting meal might hit the spot. A few ideas:', 'Một món ấm áp sẽ hợp lúc này. Vài gợi ý cho bạn:');
+    if (prefs.moods.includes('drink')) opening = t('Something to sip? These drinks are customer favorites:', 'Muốn uống gì đó? Đây là vài đồ uống được yêu thích:');
+    else if (prefs.best) opening = t('Our best sellers right now:', 'Các món bán chạy nhất hiện nay:');
+    else if (prefs.moods.includes('comfort')) opening = t('A cozy, comforting meal might hit the spot. A few ideas:', 'Một món ấm áp sẽ hợp lúc này. Vài gợi ý cho bạn:');
     else if (prefs.moods.includes('fresh')) opening = t("Let's keep it fresh and light. These could be a good fit:", 'Nhẹ nhàng và tươi mát nhé. Các món này có thể hợp với bạn:');
     else if (prefs.spicy > 0) opening = t('A little heat coming up:', 'Muốn ăn cay? Đây là vài món đậm vị:');
     else if (prefs.quick || prefs.maxPrep) opening = t('Short on time? These are among the quickest:', 'Đang vội? Đây là các món làm nhanh nhất:');

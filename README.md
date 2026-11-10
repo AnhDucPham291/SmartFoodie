@@ -1,6 +1,6 @@
 # SmartFoodie
 
-A responsive food ordering website: browse 14 restaurants and 48 dishes, filter by cuisine, order with tax calculated, find real restaurants near you, and let an AI assistant build your order.
+A responsive food ordering website: browse 14 restaurants and 188 dishes (drinks, appetizers, mains, and best sellers), filter by cuisine, order with tax calculated, find real restaurants near you, and let an AI assistant build your order.
 
 ## Preview on this computer or phone
 
@@ -14,10 +14,12 @@ Open the `localhost` address printed in the terminal on this computer. The serve
 
 ## What's on the site
 
-- **Cuisine bar**: All, Asian, American, Mexican, Italian, Japanese, Chinese, Korean, Thai, Vietnamese, Indian, Mediterranean, Middle Eastern, and Healthy. Combine it with filters (4.8+ rating, under $15, 15 minutes or less, vegetarian, spicy, new) and sorting.
+- **Cuisine bar**: All, Asian, American, Mexican, Italian, Japanese, Chinese, Korean, Thai, Vietnamese, Indian, Mediterranean, Middle Eastern, Healthy, and Drinks. Combine it with filters (4.8+ rating, under $15, 15 minutes or less, vegetarian, spicy, new, best sellers) and sorting.
 - **Instant search**: suggestions for dishes, restaurants, and cuisines as you type, with or without Vietnamese accents (`pho` and `phở` both work). Press `/` to jump to the search box.
-- **Dish pages**: large photo, ingredients, rating breakdown, customer reviews, special instructions, and quantity.
-- **Restaurant pages**: full menu with photos, delivery fee, time estimate, and reviews.
+- **Dish pages**: large photo with credit, course, ingredients, rating breakdown, customer reviews, special instructions, and quantity.
+- **Restaurant pages**: the menu is grouped into **Best sellers, Appetizers, Mains, Desserts, and Drinks** with quick links. Every item shows a photo, price, rating, prep time, and a customer quote. Each restaurant has 10 added items: 2–3 drinks, 2–3 appetizers, mains, and 2 best sellers.
+- **All dishes**: one swipeable row per course (**Mains, Appetizers, Drinks, Desserts**). Swipe sideways on a phone, or use the arrows on a computer. Cuisine, filters, sorting, and search apply inside each row.
+- **World dishes to explore**: 39 famous dishes in the same swipeable course rows, each linked to the restaurant that serves it, with price, rating, a customer review, and an Add button.
 - **20 new dishes** marked **New**, each with a photo, rating, and three reviews.
 - **Ordering**: cart grouped by restaurant, delivery or pickup, budget meter, checkout with tip, and an order confirmation with live (demo) tracking. Orders are saved on the device for **Reorder**.
 
@@ -98,7 +100,9 @@ GitHub Pages hosts static files only, so the public site uses the on-device AI a
 | File | Purpose |
 | --- | --- |
 | `index.html`, `style.css` | Page layout and design |
+| `menu-data.js` | The 10 added items per restaurant (drinks, appetizers, mains, best sellers) and their photo sources |
 | `data.js` | Cuisines, restaurants, dishes, photos, ratings, and reviews |
+| `images/dishes/` | Dish photos from Wikimedia Commons, resized to 400px and 800px WebP |
 | `pricing.js` | Fees, state sales tax, tip, and totals (integer cents) |
 | `assistant.js` | On-device AI assistant (English and Vietnamese) |
 | `app.js` | Browsing, search, cart, checkout, and the assistant chat |
@@ -107,4 +111,6 @@ GitHub Pages hosts static files only, so the public site uses the on-device AI a
 | `serve.py` | Local server and the optional Claude assistant endpoint |
 | `sw.js`, `manifest.webmanifest` | Install-to-home-screen support and offline fallback |
 
-Restaurant names, menus, prices, ratings, and reviews are sample data for the demo. Dish photos are from Unsplash.
+Restaurant names, menus, prices, ratings, and reviews are sample data for the demo.
+
+Dish photos come from [Unsplash](https://unsplash.com/), [TheMealDB](https://www.themealdb.com/), [TheCocktailDB](https://www.thecocktaildb.com/), and [Wikimedia Commons](https://commons.wikimedia.org/). Commons photos are used under their Creative Commons or public-domain licenses; each dish page shows the photographer and license and links to the original file. The author, license, and file path for every Commons photo are listed in `SF.MENU_PHOTOS` in `menu-data.js`.

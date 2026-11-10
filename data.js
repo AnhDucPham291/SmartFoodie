@@ -3,14 +3,39 @@
 (function (root) {
   const SF = root.SF || (root.SF = {});
 
+  // Image keys: 'u:' Unsplash photo id, 'l:' photo stored in images/dishes/ as 400px and 800px WebP,
+  // 'm:' TheMealDB photo id, 'c:' TheCocktailDB photo id. Anything else is used as a full URL.
   const UNSPLASH = 'https://images.unsplash.com/photo-';
-  // Returns a sized image URL. Unsplash photos are resized on their CDN; other hosts are used as-is.
-  SF.imageUrl = (image, width = 600) => image.startsWith('u:')
-    ? `${UNSPLASH}${image.slice(2)}?auto=format&fit=crop&w=${width}&q=75`
-    : image;
-  SF.imageSrcset = (image, widths = [400, 800]) => image.startsWith('u:')
-    ? widths.map(width => `${SF.imageUrl(image, width)} ${width}w`).join(', ')
-    : '';
+  const DB_HOSTS = { m: 'https://www.themealdb.com/images/media/meals/', c: 'https://www.thecocktaildb.com/images/media/drink/' };
+
+  // Returns an image URL sized for `width` CSS pixels.
+  SF.imageUrl = (image, width = 600) => {
+    const kind = image.slice(0, 2);
+    const value = image.slice(2);
+    if (kind === 'u:') return `${UNSPLASH}${value}?auto=format&fit=crop&w=${width}&q=75`;
+    if (kind === 'l:') return `images/dishes/${value}-${width <= 400 ? 400 : 800}.webp`;
+    if (kind === 'm:' || kind === 'c:') return `${DB_HOSTS[kind[0]]}${value}.jpg${width <= 350 ? '/medium' : ''}`;
+    return image;
+  };
+  SF.imageSrcset = (image, widths = [400, 800]) => {
+    const kind = image.slice(0, 2);
+    if (kind === 'u:') return widths.map(width => `${SF.imageUrl(image, width)} ${width}w`).join(', ');
+    if (kind === 'l:') return `${SF.imageUrl(image, 400)} 400w, ${SF.imageUrl(image, 800)} 800w`;
+    if (kind === 'm:' || kind === 'c:') return `${SF.imageUrl(image, 350)} 350w, ${SF.imageUrl(image, 700)} 700w`;
+    return '';
+  };
+
+  // Attribution shown on the dish page: Commons photos need author and license; the others name their source.
+  SF.photoCredit = (image, author = '', license = '', commonsPath = '') => {
+    if (commonsPath) {
+      const file = decodeURIComponent(commonsPath.split('/').pop());
+      return { source: 'Wikimedia Commons', href: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file)}`, author, license };
+    }
+    const kind = image.slice(0, 2);
+    if (kind === 'm:') return { source: 'TheMealDB', href: 'https://www.themealdb.com/', author: '', license: '' };
+    if (kind === 'c:') return { source: 'TheCocktailDB', href: 'https://www.thecocktaildb.com/', author: '', license: '' };
+    return null;
+  };
 
   // Category rail. `match` decides which dishes belong to a category.
   SF.categories = [
@@ -25,10 +50,22 @@
     { id: 'thai', label: 'Thai', icon: '🍤', cuisines: ['Thai'] },
     { id: 'vietnamese', label: 'Vietnamese', icon: '🍜', cuisines: ['Vietnamese'] },
     { id: 'indian', label: 'Indian', icon: '🍛', cuisines: ['Indian'] },
-    { id: 'mediterranean', label: 'Mediterranean', icon: '🫒', cuisines: ['Spanish', 'Greek', 'Middle Eastern'] },
+    { id: 'mediterranean', label: 'Mediterranean', icon: '🫒', cuisines: ['Spanish', 'Greek', 'Middle Eastern', 'Mediterranean'] },
     { id: 'middle-eastern', label: 'Middle Eastern', icon: '🧆', cuisines: ['Middle Eastern'] },
-    { id: 'healthy', label: 'Healthy', icon: '🥗', tags: ['Healthy'] }
+    { id: 'healthy', label: 'Healthy', icon: '🥗', tags: ['Healthy'] },
+    { id: 'drinks', label: 'Drinks', icon: '🥤', courses: ['drink'] }
   ];
+
+  // Menu sections, in the order a restaurant menu shows them. Best sellers come first.
+  SF.COURSES = [
+    { id: 'appetizer', label: 'Appetizers', single: 'Appetizer' },
+    { id: 'main', label: 'Mains', single: 'Main' },
+    { id: 'dessert', label: 'Desserts', single: 'Dessert' },
+    { id: 'drink', label: 'Drinks', single: 'Drink' }
+  ];
+  SF.courseLabel = course => (SF.COURSES.find(item => item.id === course) || {}).single || '';
+  // Original dishes that are starters; every other original dish is a main.
+  const ORIGINAL_APPETIZERS = new Set(['xiao-long-bao', 'veg-samosas', 'loaded-fries', 'buffalo-wings']);
 
   SF.restaurants = [
     { id: 'little-saigon', name: 'Little Saigon Noodle Bar', cuisine: 'Vietnamese', rating: 4.8, ratingCount: 1260, eta: [20, 30], deliveryFee: 1.49, priceLevel: '$$', image: 'u:1582878826629-29b7ad1cdc43', tagline: 'Slow-simmered broths and Saigon street food' },
@@ -196,12 +233,31 @@
   let reviewerIndex = 0;
   const nextReviewer = () => REVIEWER_NAMES[reviewerIndex++ % REVIEWER_NAMES.length];
 
-  SF.dishes = DISH_ROWS.map(([id, name, restaurantId, cuisine, price, rating, ratingCount, prep, diet, spicy, tags, image, description, ingredients, aliases, isNew], dishIndex) => ({
-    id, name, restaurantId, cuisine, price, rating, ratingCount, prep, diet, spicy, tags, image, description, ingredients,
-    aliases: aliases || [],
-    isNew: Boolean(isNew),
-    imageAlt: `${name}: ${description.charAt(0).toLowerCase()}${description.slice(1).replace(/\.$/, '')}`,
-    reviews: (DISH_REVIEWS[id] || []).map(([stars, text], reviewIndex) => ({
+  const originalDishes = DISH_ROWS.map(([id, name, restaurantId, cuisine, price, rating, ratingCount, prep, diet, spicy, tags, image, description, ingredients, aliases, isNew]) => ({
+    id, name, restaurantId, cuisine, price, rating, ratingCount, prep, diet, spicy, tags, image, description, ingredients, aliases, isNew,
+    course: ORIGINAL_APPETIZERS.has(id) ? 'appetizer' : 'main',
+    bestSeller: false,
+    reviewRows: DISH_REVIEWS[id] || []
+  }));
+
+  // Dishes from menu-data.js: drinks, appetizers, mains, and best sellers for every restaurant.
+  const photos = SF.MENU_PHOTOS || {};
+  const addedDishes = Object.entries(SF.MENU_ADDITIONS || {}).flatMap(([restaurantId, rows]) => rows.map(
+    ([course, id, name, cuisine, price, rating, ratingCount, prep, diet, spicy, tags, description, ingredients, aliases, reviewRows, best]) => {
+      const [image, author, license, commonsPath] = [].concat(photos[id] || '');
+      return {
+        id, name, restaurantId, cuisine, price, rating, ratingCount, prep, diet, spicy, tags, image, description, ingredients, aliases,
+        isNew: false, course, bestSeller: best === 'best', reviewRows, photoCredit: SF.photoCredit(image, author, license, commonsPath)
+      };
+    }
+  ));
+
+  SF.dishes = [...originalDishes, ...addedDishes].map(({ reviewRows, ...dish }, dishIndex) => ({
+    ...dish,
+    aliases: dish.aliases || [],
+    isNew: Boolean(dish.isNew),
+    imageAlt: `${dish.name}: ${dish.description.charAt(0).toLowerCase()}${dish.description.slice(1).replace(/\.$/, '')}`,
+    reviews: reviewRows.map(([stars, text], reviewIndex) => ({
       name: nextReviewer(),
       rating: stars,
       daysAgo: 1 + ((dishIndex * 5 + reviewIndex * 9) % 45),
@@ -237,6 +293,7 @@
   SF.dishMatchesCategory = (dish, categoryId) => {
     const category = SF.categories.find(item => item.id === categoryId);
     if (!category || category.id === 'all') return true;
+    if (category.courses) return category.courses.includes(dish.course);
     if (category.cuisines && category.cuisines.includes(dish.cuisine)) return true;
     if (category.tags && category.tags.some(tag => dish.tags.includes(tag))) return true;
     return false;

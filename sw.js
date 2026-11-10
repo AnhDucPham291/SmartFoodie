@@ -1,8 +1,9 @@
-const CACHE_NAME = 'smartfoodie-shell-v6';
+const CACHE_NAME = 'smartfoodie-shell-v7';
 const SHELL_FILES = [
   './',
   './index.html',
   './style.css',
+  './menu-data.js',
   './data.js',
   './pricing.js',
   './assistant.js',

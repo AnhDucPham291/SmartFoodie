@@ -159,11 +159,16 @@
     fast: dish => dish.prep <= 15,
     vegetarian: dish => dish.diet === 'vegetarian' || dish.diet === 'vegan',
     spicy: dish => dish.spicy > 0,
-    new: dish => dish.isNew
+    new: dish => dish.isNew,
+    best: dish => dish.bestSeller
+  };
+  const courseWords = dish => {
+    const course = SF.COURSES.find(item => item.id === dish.course);
+    return `${course ? `${course.single} ${course.label}` : ''}${dish.bestSeller ? ' best seller bestseller' : ''}`;
   };
   const searchText = new Map(SF.dishes.map(dish => {
     const restaurant = restaurantOf(dish);
-    return [dish.id, normalize(`${dish.name} ${restaurant.name} ${dish.cuisine} ${dish.tags.join(' ')} ${dish.aliases.join(' ')} ${dish.description} ${dish.diet}`)];
+    return [dish.id, normalize(`${dish.name} ${restaurant.name} ${dish.cuisine} ${dish.tags.join(' ')} ${dish.aliases.join(' ')} ${dish.description} ${dish.diet} ${courseWords(dish)}`)];
   }));
   const queryMatches = (text, query) => normalize(query).split(' ').filter(Boolean).every(token => text.includes(token));
 
@@ -187,25 +192,66 @@
   const stars = rating => `<span class="stars" aria-label="${rating} out of 5 stars">${[1, 2, 3, 4, 5].map(n => icon('star', `icon${n <= Math.round(rating) ? '' : ' off'}`)).join('')}</span>`;
   const ratingInline = dish => `<span class="stars-inline">${icon('star')}${dish.rating.toFixed(1)} <small>(${dish.ratingCount})</small></span>`;
 
-  function dishCard(dish, { sizes } = {}) {
-    const restaurant = restaurantOf(dish);
+  const quickAdd = dish => {
     const quantity = cartQuantity(dish.id);
+    return `<button type="button" class="quick-add${quantity ? ' in-cart' : ''}" data-add="${dish.id}" aria-label="Add ${esc(dish.name)} to order">${quantity ? `<span>${quantity}</span>` : icon('plus')}</button>`;
+  };
+  const badgeFor = dish => (dish.isNew ? '<span class="badge badge-new">New</span>'
+    : dish.bestSeller ? '<span class="badge badge-best">Best seller</span>' : '');
+
+  function dishCard(dish, { sizes, heading = 'h3' } = {}) {
+    const restaurant = restaurantOf(dish);
     return `<article class="dish-card">
       <div class="media-wrap">
         <button type="button" class="dish-media" data-open-dish="${dish.id}" aria-label="${esc(dish.name)} details">
           ${img(dish.image, dish.imageAlt, { sizes })}
-          ${dish.isNew ? '<span class="badge badge-new">New</span>' : ''}
+          ${badgeFor(dish)}
           ${dish.spicy > 1 ? '<span class="badge badge-spicy">Spicy</span>' : ''}
         </button>
-        <button type="button" class="quick-add${quantity ? ' in-cart' : ''}" data-add="${dish.id}" aria-label="Add ${esc(dish.name)} to order">${quantity ? `<span>${quantity}</span>` : icon('plus')}</button>
+        ${quickAdd(dish)}
       </div>
       <div class="dish-body">
-        <h3>${esc(dish.name)}</h3>
+        <${heading} class="dish-title">${esc(dish.name)}</${heading}>
         <div class="dish-line"><span class="price">${usd(dish.price)}</span><span class="dot">•</span>${ratingInline(dish)}</div>
         <div class="dish-sub">${esc(restaurant.name)} · ${dish.prep} min</div>
       </div>
     </article>`;
   }
+
+  // One swipeable row per course: Mains, Appetizers, Drinks, then Desserts. Empty rows are skipped.
+  const ROW_COURSES = ['main', 'appetizer', 'drink', 'dessert'];
+  function courseRows(prefix, items, { courseOf = item => item.course, card, rowClass = 'dish-row' }) {
+    return ROW_COURSES.map(courseId => {
+      const list = items.filter(item => courseOf(item) === courseId);
+      if (!list.length) return '';
+      const course = SF.COURSES.find(item => item.id === courseId);
+      const id = `${prefix}-${courseId}`;
+      const name = course.label.toLowerCase();
+      return `<div class="course-row" role="group" aria-labelledby="${id}-title">
+        <div class="course-head">
+          <h3 id="${id}-title">${course.label} <span class="course-count">${list.length}</span></h3>
+          <div class="scroller-nav"><button type="button" class="round-button" data-scroll="${id}" data-dir="-1" aria-label="Scroll ${name} left">${icon('left')}</button><button type="button" class="round-button" data-scroll="${id}" data-dir="1" aria-label="Scroll ${name} right">${icon('right')}</button></div>
+        </div>
+        <div class="h-scroller ${rowClass}" id="${id}">${list.map(card).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Dim a row's arrows when it can't scroll further that way.
+  function syncScrollButtons(row) {
+    const max = row.scrollWidth - row.clientWidth - 2;
+    $$(`[data-scroll="${row.id}"]`).forEach(button => {
+      button.disabled = Number(button.dataset.dir) < 0 ? row.scrollLeft <= 2 : row.scrollLeft >= max;
+    });
+  }
+  const syncAllScrollButtons = (root = document) => $$('.h-scroller[id]', root).forEach(syncScrollButtons);
+  let scrollSyncFrame = 0;
+  document.addEventListener('scroll', event => {
+    if (!(event.target instanceof Element) || !event.target.matches('.h-scroller[id]')) return;
+    cancelAnimationFrame(scrollSyncFrame);
+    scrollSyncFrame = requestAnimationFrame(() => syncScrollButtons(event.target));
+  }, true);
+  window.addEventListener('resize', () => syncAllScrollButtons());
 
   function restaurantCard(restaurant, highlightCount) {
     return `<button type="button" class="rest-card" data-open-restaurant="${restaurant.id}">
@@ -252,10 +298,14 @@
   function renderGrid() {
     const dishes = filteredDishes();
     const category = SF.categories.find(item => item.id === state.category);
-    const title = state.query ? `Results for “${state.query}”` : category.id === 'all' ? 'All dishes' : `${category.label} dishes`;
+    const onlyDrinks = Boolean(category.courses);
+    const title = state.query ? `Results for “${state.query}”` : category.id === 'all' ? 'All dishes' : onlyDrinks ? category.label : `${category.label} dishes`;
+    const noun = onlyDrinks ? (dishes.length === 1 ? 'drink' : 'drinks') : (dishes.length === 1 ? 'dish' : 'dishes');
     $('#dishesTitle').textContent = title;
-    $('#dishesSub').textContent = `${dishes.length} dish${dishes.length === 1 ? '' : 'es'}${state.chips.size ? ' · filtered' : ''}`;
-    $('#dishGrid').innerHTML = dishes.map(dish => dishCard(dish)).join('');
+    $('#dishesSub').textContent = `${dishes.length} ${noun}${state.chips.size ? ' · filtered' : ''}`;
+    const rows = $('#dishRows');
+    rows.innerHTML = courseRows('dishes', dishes, { card: dish => dishCard(dish, { sizes: '(max-width: 760px) 46vw, 250px', heading: 'h4' }) });
+    syncAllScrollButtons(rows);
     $('#dishEmpty').hidden = dishes.length > 0;
     $('#clearFilters').hidden = !(state.chips.size || state.category !== 'all' || state.query || state.sort !== 'recommended');
   }
@@ -264,6 +314,7 @@
     renderRestaurants();
     renderNewRow();
     renderGrid();
+    syncAllScrollButtons();
     window.dispatchEvent(new CustomEvent('sf:category', { detail: { category: state.category } }));
   }
 
@@ -477,16 +528,19 @@
       return `<div class="histogram-row"><span>${starCount}★</span><div class="histogram-bar"><span style="width:${share}%"></span></div><span>${share}%</span></div>`;
     }).join('');
     const tags = [
+      dish.bestSeller ? `<span class="tag tag-best">${icon('star')} Best seller</span>` : '',
       dietLabel[dish.diet] ? `<span class="tag tag-diet">${dietLabel[dish.diet]}</span>` : '',
       dish.spicy ? `<span class="tag tag-spicy">${'🌶'.repeat(dish.spicy)} ${dish.spicy > 1 ? 'Spicy' : 'Mild heat'}</span>` : '',
       `<span class="tag">${icon('clock')} ${dish.prep} min prep</span>`,
-      ...dish.tags.map(tag => `<span class="tag">${esc(tag)}</span>`)
+      ...dish.tags.filter(tag => tag !== 'Drink').map(tag => `<span class="tag">${esc(tag)}</span>`)
     ].join('');
+    const credit = dish.photoCredit;
+    const creditLine = credit ? `<p class="photo-credit">Photo: <a href="${esc(credit.href)}" target="_blank" rel="noreferrer">${esc(credit.author || credit.source)}</a>${credit.license ? ` · ${esc(credit.license)}` : ''}${credit.author ? ` · ${esc(credit.source)}` : ''}</p>` : '';
     $('#dishDialogBody').innerHTML = `
-      <div class="dish-hero">${img(dish.image, dish.imageAlt, { widths: [800, 1200], width: 900, sizes: '(max-width: 900px) 100vw, 470px', eager: true })}</div>
+      <div class="dish-hero">${img(dish.image, dish.imageAlt, { widths: [800, 1200], width: 900, sizes: '(max-width: 900px) 100vw, 470px', eager: true })}${creditLine}</div>
       <div class="dish-detail">
         <div>
-          <p class="eyebrow">${esc(dish.cuisine)} · <button type="button" data-open-restaurant="${restaurant.id}">${esc(restaurant.name)}</button>${dish.isNew ? ' · <b style="color:var(--brand)">New</b>' : ''}</p>
+          <p class="eyebrow">${esc(dish.cuisine)} · ${SF.courseLabel(dish.course)} · <button type="button" data-open-restaurant="${restaurant.id}">${esc(restaurant.name)}</button>${dish.isNew ? ' · <b class="eyebrow-new">New</b>' : ''}</p>
           <h2 id="dishDialogTitle">${esc(dish.name)}</h2>
           <p class="dish-price">${usd(dish.price)}</p>
         </div>
@@ -536,10 +590,34 @@
   }
 
   // ---------- Restaurant menu ----------
+  // The most helpful sample review to quote under a dish: the first 5-star one, else the first.
+  const topReview = dish => dish.reviews.find(review => review.rating === 5) || dish.reviews[0] || null;
+  const shortName = name => { const [first, last = ''] = name.split(' '); return last ? `${first} ${last[0]}.` : first; };
+
+  // Best sellers first, then appetizers, mains, desserts, and drinks. Empty sections are skipped.
+  const menuSections = dishes => [
+    { id: 'best', label: 'Best sellers', dishes: dishes.filter(dish => dish.bestSeller) },
+    ...SF.COURSES.map(course => ({ id: course.id, label: course.label, dishes: dishes.filter(dish => !dish.bestSeller && dish.course === course.id) }))
+  ].filter(section => section.dishes.length);
+
+  function menuItem(dish) {
+    const quote = topReview(dish);
+    return `<div class="menu-item">
+      <button type="button" class="menu-item-text" data-open-dish="${dish.id}">
+        <strong>${esc(dish.name)}${dish.isNew ? ' <span class="tag tag-new">New</span>' : ''}</strong>
+        <span class="dish-line"><span class="price">${usd(dish.price)}</span><span class="dot">•</span>${ratingInline(dish)}<span class="dot">•</span>${dish.prep} min</span>
+        <p>${esc(dish.description)}</p>
+        ${quote ? `<span class="menu-quote">“${esc(quote.text)}” <span>${esc(shortName(quote.name))}</span></span>` : ''}
+      </button>
+      <div class="menu-item-media">${img(dish.image, dish.imageAlt, { widths: [240], width: 240, sizes: '104px' })}${quickAdd(dish)}</div>
+    </div>`;
+  }
+
   function openRestaurant(restaurantId) {
     const restaurant = SF.restaurantById.get(restaurantId);
     if (!restaurant) return;
     const dishes = restaurant.dishIds.map(id => SF.dishById.get(id));
+    const sections = menuSections(dishes);
     const average = restaurant.reviews.reduce((sum, review) => sum + review.rating, 0) / restaurant.reviews.length;
     $('#restaurantDialogBody').innerHTML = `
       <div class="rest-cover">${img(restaurant.image, `${restaurant.name}: ${restaurant.tagline}`, { widths: [800, 1400], width: 1000, sizes: '(max-width: 760px) 100vw, 820px', eager: true })}<h2 id="restaurantDialogTitle">${esc(restaurant.name)}</h2></div>
@@ -549,16 +627,13 @@
         <span>${icon(state.mode === 'pickup' ? 'store' : 'scooter')} ${feeText(restaurant)}</span>
         <span>${esc(restaurant.cuisine)} · ${restaurant.priceLevel}</span>
       </div>
+      <nav class="menu-nav" aria-label="Menu sections">${sections.map(section => `<button type="button" class="chip" data-menu-jump="${section.id}">${section.label} <span>${section.dishes.length}</span></button>`).join('')}</nav>
       <div class="rest-section">
-        <h3>Menu</h3>
-        <div class="menu-list">${dishes.map(dish => `<div class="menu-item">
-          <button type="button" class="menu-item-text" data-open-dish="${dish.id}">
-            <strong>${esc(dish.name)}${dish.isNew ? ' <span class="tag" style="background:var(--brand-soft);color:var(--brand)">New</span>' : ''}</strong>
-            <span class="dish-line"><span class="price">${usd(dish.price)}</span><span class="dot">•</span>${ratingInline(dish)}<span class="dot">•</span>${dish.prep} min</span>
-            <p>${esc(dish.description)}</p>
-          </button>
-          <div class="menu-item-media">${img(dish.image, dish.imageAlt, { widths: [240], width: 240, sizes: '104px' })}<button type="button" class="quick-add${cartQuantity(dish.id) ? ' in-cart' : ''}" data-add="${dish.id}" aria-label="Add ${esc(dish.name)} to order">${cartQuantity(dish.id) ? `<span>${cartQuantity(dish.id)}</span>` : icon('plus')}</button></div>
-        </div>`).join('')}</div>
+        <h3>Menu <small class="muted">${dishes.length} items</small></h3>
+        ${sections.map(section => `<section class="menu-section" id="menu-${section.id}" aria-labelledby="menu-${section.id}-title">
+          <h4 id="menu-${section.id}-title">${section.id === 'best' ? icon('star') : ''}${section.label}</h4>
+          <div class="menu-list">${section.dishes.map(menuItem).join('')}</div>
+        </section>`).join('')}
       </div>
       <div class="rest-section">
         <h3>Reviews <small class="muted" style="font-weight:500">★ ${average.toFixed(1)} from ${restaurant.reviews.length} recent reviews</small></h3>
@@ -570,6 +645,10 @@
     openDialog(dialog);
     dialog.scrollTop = 0;
   }
+  $('#restaurantDialog').addEventListener('click', event => {
+    const jump = event.target.closest('[data-menu-jump]');
+    if (jump) document.getElementById(`menu-${jump.dataset.menuJump}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   // ---------- Cart drawer ----------
   const stateOptions = selected => Object.entries(SF.TAX_RATES)
@@ -921,11 +1000,13 @@
   const aiInput = $('#aiInput');
   const aiHistory = [];
   const ai = { remote: false, model: null, busy: false, greeted: false };
-  const SUGGESTIONS = ['Dinner for 3 under $50', 'Something spicy under $15', 'Quick vegetarian lunch', 'Thêm 2 phở bò', "What's my total with tax?", 'Checkout'];
+  const SUGGESTIONS = ['Dinner for 3 under $50', 'Best sellers under $15', 'Something spicy under $15', 'Quick vegetarian lunch', 'Thêm 2 phở bò', 'Gợi ý đồ uống', "What's my total with tax?", 'Checkout'];
 
+  // Course and best-seller status travel as tags so the server prompt needs no extra fields.
   const menuForAi = SF.dishes.map(dish => ({
     id: dish.id, name: dish.name, restaurant: restaurantOf(dish).name, cuisine: dish.cuisine, price: dish.price, prep: dish.prep,
-    diet: dish.diet, spicy: dish.spicy, rating: dish.rating, ratingCount: dish.ratingCount, tags: dish.tags
+    diet: dish.diet, spicy: dish.spicy, rating: dish.rating, ratingCount: dish.ratingCount,
+    tags: [SF.courseLabel(dish.course), ...(dish.bestSeller ? ['Best seller'] : []), ...dish.tags.filter(tag => tag !== 'Drink')]
   }));
 
   async function detectRemoteAssistant() {
@@ -989,7 +1070,7 @@
     return `<div class="ai-cards">${dishes.map(dish => `<div class="ai-card">
       ${img(dish.image, dish.imageAlt, { widths: [160], width: 160, sizes: '64px' })}
       <button type="button" class="ai-card-text" data-open-dish="${dish.id}"><strong>${esc(dish.name)}</strong><small>${usd(dish.price)} · ★ ${dish.rating.toFixed(1)} · ${dish.prep} min</small><small>${esc(restaurantOf(dish).name)}</small></button>
-      <button type="button" class="quick-add${cartQuantity(dish.id) ? ' in-cart' : ''}" data-add="${dish.id}" aria-label="Add ${esc(dish.name)} to order">${cartQuantity(dish.id) ? `<span>${cartQuantity(dish.id)}</span>` : icon('plus')}</button>
+      ${quickAdd(dish)}
     </div>`).join('')}</div>`;
   }
 
@@ -1150,7 +1231,7 @@
   renderBrowse();
   cartChanged();
   detectRemoteAssistant();
-  window.SFApp = { toast, openDish, openRestaurant, openAssistant, sendToAssistant, setTaxState };
+  window.SFApp = { toast, openDish, openRestaurant, openAssistant, sendToAssistant, setTaxState, quickAdd, topReview, shortName, courseRows, syncAllScrollButtons };
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
