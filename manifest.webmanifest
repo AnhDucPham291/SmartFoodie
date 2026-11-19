@@ -1,7 +1,7 @@
 {
-  "name": "SmartFoodie — Order food you'll love",
+  "name": "SmartFoodie — Dine in, book a table, or pick up",
   "short_name": "SmartFoodie",
-  "description": "Order from local favorites, filter by cuisine, and let the AI assistant build your order with tax included.",
+  "description": "Dine in, book a table for your group, or order ahead for pickup. See hours and prep times, check in together, and split the bill.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -42,34 +42,30 @@
   /**
    * @param {object} order
    * @param {{price:number, quantity:number, restaurantId:string}[]} order.items
-   * @param {'delivery'|'pickup'} order.mode
+   * @param {'dinein'|'reservation'|'pickup'} order.mode  how the food is eaten (no delivery)
    * @param {string} order.state  two-letter state code used for sales tax
-   * @param {Object<string, number>} order.deliveryFees  delivery fee in dollars per restaurant id
-   * @param {number} [order.tipPercent]  percent of the food subtotal (delivery only)
-   * @param {number|null} [order.tipAmount]  custom tip in dollars (delivery only); overrides tipPercent
-   * Returns every line in cents plus the tax rate used.
+   * @param {number} [order.tipPercent]  tip for the restaurant team, percent of the food subtotal
+   * @param {number|null} [order.tipAmount]  custom tip in dollars; overrides tipPercent
+   * Returns every line in cents plus the tax rate used. A reservation without a pre-order costs $0.
    */
-  SF.computeTotals = ({ items = [], mode = 'delivery', state = '', deliveryFees = {}, tipPercent = 0, tipAmount = null } = {}) => {
+  SF.computeTotals = ({ items = [], mode = 'dinein', state = '', tipPercent = 0, tipAmount = null } = {}) => {
     const lines = items.filter(item => item.quantity > 0);
     const subtotal = lines.reduce((sum, item) => sum + toCents(item.price) * item.quantity, 0);
     const restaurantIds = [...new Set(lines.map(item => item.restaurantId))];
-    const delivery = mode === 'delivery' && subtotal > 0
-      ? restaurantIds.reduce((sum, id) => sum + toCents(deliveryFees[id] || 0), 0)
-      : 0;
     const service = subtotal > 0 ? clamp(Math.round(subtotal * FEES.serviceRate), FEES.serviceMinCents, FEES.serviceMaxCents) : 0;
     const smallOrder = subtotal > 0 && subtotal < FEES.smallOrderThresholdCents ? FEES.smallOrderFeeCents : 0;
     const taxRate = SF.taxRateFor(state);
     // Sales tax is estimated on the food subtotal.
     const tax = percentOf(subtotal, taxRate);
     let tip = 0;
-    if (mode === 'delivery' && subtotal > 0) {
+    if (subtotal > 0) {
       tip = tipAmount != null && Number.isFinite(Number(tipAmount))
         ? Math.max(0, toCents(tipAmount))
         : percentOf(subtotal, Math.max(0, tipPercent || 0));
     }
-    const totalBeforeTip = subtotal + delivery + service + smallOrder + tax;
+    const totalBeforeTip = subtotal + service + smallOrder + tax;
     return {
-      subtotal, delivery, service, smallOrder, tax, tip, taxRate,
+      mode, subtotal, service, smallOrder, tax, tip, taxRate,
       restaurantCount: restaurantIds.length,
       totalBeforeTip,
       total: totalBeforeTip + tip

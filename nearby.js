@@ -23,6 +23,7 @@
   const listEl = section.querySelector('#nearbyList');
   const countEl = section.querySelector('#nearbyCount');
   const filterGroup = section.querySelector('#nearbyFilters');
+  const featureGroup = section.querySelector('#nearbyFeatures');
   const filterText = section.querySelector('#nearbyFilterText');
   const mapEl = section.querySelector('#nearbyMap');
 
@@ -51,6 +52,7 @@
   let centerLayer = null;
   let places = [];
   let activeFilter = 'all';
+  const activeFeatures = new Set(); // 'reservations', 'takeout', 'hours'
   let activeController = null;
   let lastCenter = null;
   const markersById = new Map();
@@ -224,8 +226,9 @@
         hours: tags.opening_hours || '',
         phone: tags.phone || tags['contact:phone'] || '',
         website: tags.website || tags['contact:website'] || '',
-        takeaway: tags.takeaway === 'yes',
-        delivery: tags.delivery === 'yes',
+        takeaway: tags.takeaway === 'yes' || tags.takeaway === 'only',
+        reservations: ['yes', 'required', 'recommended'].includes(tags.reservation),
+        outdoor: tags.outdoor_seating === 'yes',
         lat,
         lon,
         distance: distanceMeters(center, { lat, lon })
@@ -253,7 +256,7 @@
           id: `${osmType[props.osm_type] || 'node'}/${props.osm_id}`,
           name: props.name,
           type: props.osm_value,
-          cuisine: '', hours: '', phone: '', website: '', takeaway: false, delivery: false,
+          cuisine: '', hours: '', phone: '', website: '', takeaway: false, reservations: false, outdoor: false,
           address: [street, props.city].filter(Boolean).join(', '),
           lat, lon,
           distance: distanceMeters(center, { lat, lon })
@@ -292,6 +295,7 @@
     return `<div class="nearby-popup">
       <strong>${escapeHtml(place.name)}</strong>
       <span>${escapeHtml(TYPE_LABELS[place.type] || 'Restaurant')}${place.cuisine ? ` · ${escapeHtml(place.cuisine)}` : ''} · ${formatDistance(place.distance)}</span>
+      ${place.reservations ? '<small>Takes reservations</small>' : ''}
       ${place.address ? `<small>${escapeHtml(place.address)}</small>` : ''}
       ${place.hours ? `<small>◷ ${escapeHtml(place.hours)}</small>` : ''}
       ${place.phone ? `<small>☎ <a href="tel:${escapeHtml(place.phone.replace(/[^\d+]/g, ''))}">${escapeHtml(place.phone)}</a></small>` : ''}
@@ -299,9 +303,11 @@
     </div>`;
   }
 
+  const FEATURE_TESTS = { reservations: place => place.reservations, takeout: place => place.takeaway, hours: place => Boolean(place.hours) };
   function matchingPlaces() {
     const text = normalize(filterText?.value.trim());
     return places.filter(place => (activeFilter === 'all' || place.type === activeFilter)
+      && [...activeFeatures].every(feature => FEATURE_TESTS[feature](place))
       && (!text || normalize(`${place.name} ${place.cuisine} ${place.address}`).includes(text)));
   }
 
@@ -335,7 +341,8 @@
     countEl.textContent = `${matches.length} ${matches.length === 1 ? 'place' : 'places'}`;
 
     if (!shown.length) {
-      listEl.innerHTML = `<li class="nearby-empty"><strong>${places.length ? 'No places match this filter' : 'No restaurants found here'}</strong><p>Try a larger radius, another category, or a different ZIP code.</p></li>`;
+      const featureNote = activeFeatures.size ? ' Reservations, takeout, and hours only show when OpenStreetMap lists them.' : '';
+      listEl.innerHTML = `<li class="nearby-empty"><strong>${places.length ? 'No places match this filter' : 'No restaurants found here'}</strong><p>Try a larger radius, another category, or a different ZIP code.${featureNote}</p></li>`;
       return;
     }
 
@@ -347,10 +354,11 @@
             <strong>${escapeHtml(place.name)}</strong>
             <small>${escapeHtml(TYPE_LABELS[place.type] || 'Restaurant')}${place.cuisine ? ` · ${escapeHtml(place.cuisine)}` : ''}</small>
             ${place.address ? `<small>${escapeHtml(place.address)}</small>` : ''}
+            ${place.hours ? `<small class="nearby-hours">◷ ${escapeHtml(place.hours)}</small>` : ''}
           </span>
           <span class="nearby-distance">${formatDistance(place.distance)}</span>
         </button>
-        <div class="nearby-item-tags">${place.takeaway ? '<span>Takeout</span>' : ''}${place.delivery ? '<span>Delivery</span>' : ''}<a href="${directionsUrl(place)}" target="_blank" rel="noreferrer">Directions ↗</a></div>
+        <div class="nearby-item-tags">${place.reservations ? '<span class="tag-reserve">Takes reservations</span>' : ''}${place.takeaway ? '<span>Takeout</span>' : ''}${place.outdoor ? '<span>Outdoor seating</span>' : ''}<a href="${directionsUrl(place)}" target="_blank" rel="noreferrer">Directions ↗</a></div>
       </li>`).join('');
 
     if (!map) return;
@@ -533,6 +541,15 @@
     if (!button) return;
     activeFilter = button.dataset.type;
     render();
+  });
+  featureGroup?.addEventListener('click', event => {
+    const button = event.target.closest('button[data-feature]');
+    if (!button) return;
+    const feature = button.dataset.feature;
+    if (activeFeatures.has(feature)) activeFeatures.delete(feature); else activeFeatures.add(feature);
+    button.setAttribute('aria-pressed', String(activeFeatures.has(feature)));
+    render();
+    if (places.length && lastCenter) summarize(lastCenter.label);
   });
   filterText?.addEventListener('input', () => {
     render();

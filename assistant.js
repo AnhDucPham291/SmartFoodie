@@ -1,7 +1,9 @@
 // On-device ordering assistant. Understands English and Vietnamese requests such as
-// "add 2 pho for pickup", "thêm 2 phở", "something spicy under $15", or
-// "dinner for 3 under $50", and turns them into cart actions and recommendations.
-// The same action format is used by the Claude-powered assistant in serve.py.
+// "add 2 pho for pickup", "thêm 2 phở", "something spicy under $15", "dinner for 3 under $50",
+// "book a table for 4 at 7pm", "đặt bàn 6 người lúc 7h tối", "check in", or "chia tiền",
+// and turns them into cart actions, bookings, and recommendations. SmartFoodie has dine-in,
+// reservations, and pickup only (no delivery). The same action format is used by the
+// Claude-powered assistant in serve.py.
 (function (root) {
   const SF = root.SF || (root.SF = {});
 
@@ -117,7 +119,7 @@
   }
 
   const isVietnamese = text => /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹáàãéèíìóòõúùýđ]/i.test(text)
-    || /\b(toi|minh|muon|cho|mon|them|bot|nguoi|duoi|re|ngon|an gi|goi y|giao|thanh toan|bao nhieu|khong)\b/.test(normalize(text));
+    || /\b(toi|minh|muon|cho|mon|them|bot|nguoi|duoi|re|ngon|an gi|goi y|giao|thanh toan|bao nhieu|khong|dat ban|chia tien|toi nay|ngay mai)\b/.test(normalize(text));
 
   const CUISINE_PATTERNS = [
     ['Vietnamese', /\b(vietnamese|viet|mon viet|viet nam)\b/],
@@ -183,6 +185,9 @@
     prefs.cheap = /\b(cheap|cheapest|affordable|value|re|tiet kiem)\b/.test(free);
     prefs.best = /\b(best ?sellers?|bestsellers?|popular|most ordered|signature|ban chay|pho bien|noi tieng|mon tu)\b/.test(free);
     prefs.surprise = /\b(surprise|anything|whatever|random|gi cung duoc|bat ky|tuy ban)\b/.test(free);
+    prefs.openNow = /\b(open now|open|dang mo|mo cua|con mo)\b/.test(free);
+    const miles = raw.match(/(?:within|under|in)?\s*(\d+(?:\.\d+)?)\s*(?:mi|miles?)\b/);
+    prefs.maxDistance = miles ? Number(miles[1]) : /\b(near me|nearby|close by|gan day|gan toi|gan nhat)\b/.test(free) ? 1 : null;
     return prefs;
   }
 
@@ -225,10 +230,19 @@
   };
 
   // Applies hard filters, relaxing cuisine first and time second if nothing matches.
-  function candidateDishes(dishes, prefs, { usePrice = true } = {}) {
+  function candidateDishes(dishes, prefs, { usePrice = true, ctx = null } = {}) {
     const notes = [];
     const base = dishes.filter(dish => courseAllows(dish, prefs) && dietAllows(dish, prefs.diet) && !(prefs.spicy < 0 && dish.spicy > 1));
     let pool = base;
+    const restaurantOf = dish => (ctx && ctx.restaurants ? ctx.restaurants.find(restaurant => restaurant.id === dish.restaurantId) : null);
+    if (prefs.openNow && SF.schedule && ctx) {
+      const open = pool.filter(dish => restaurantOf(dish) && SF.schedule.dishAvailableAt(dish, restaurantOf(dish), ctx.now || new Date()));
+      if (open.length) pool = open; else notes.push('open');
+    }
+    if (prefs.maxDistance && ctx) {
+      const near = pool.filter(dish => restaurantOf(dish) && restaurantOf(dish).distance <= prefs.maxDistance);
+      if (near.length) pool = near; else notes.push('distance');
+    }
     if (prefs.cuisines.length) {
       const inCuisine = pool.filter(dish => prefs.cuisines.includes(dish.cuisine));
       if (inCuisine.length) pool = inCuisine; else notes.push('cuisine');
@@ -244,8 +258,8 @@
     return { pool: pool.length ? pool : base.length ? base : dishes, notes };
   }
 
-  function recommend(dishes, prefs, count = 3) {
-    const { pool, notes } = candidateDishes(dishes, prefs);
+  function recommend(dishes, prefs, count = 3, ctx = null) {
+    const { pool, notes } = candidateDishes(dishes, prefs, { ctx });
     const ranked = pool.map(dish => ({ dish, score: scoreDish(dish, prefs) }))
       .sort((a, b) => b.score - a.score || a.dish.prep - b.dish.prep);
     // Keep picks varied: at most one dish per restaurant when possible.
@@ -258,14 +272,14 @@
     return { dishes: picks, notes };
   }
 
-  // Picks `people` dishes from one restaurant (one delivery fee) that maximize preference
+  // Picks `people` dishes from one restaurant (everyone eats together) that maximize preference
   // score while keeping the total with tax and fees (before tip) within the budget.
   function planMeal(dishes, prefs, ctx) {
     const people = Math.min(6, prefs.people || 2);
     const budgetCents = prefs.maxPrice ? Math.round(prefs.maxPrice * 100) : null;
     // A meal plan gives each person a main; drinks and starters can be added on top.
     const mains = dishes.filter(dish => dish.course === 'main');
-    const { pool } = candidateDishes(mains.length ? mains : dishes, { ...prefs, moods: prefs.moods.filter(mood => mood !== 'drink') }, { usePrice: false });
+    const { pool } = candidateDishes(mains.length ? mains : dishes, { ...prefs, moods: prefs.moods.filter(mood => mood !== 'drink') }, { usePrice: false, ctx });
     const byRestaurant = new Map();
     pool.forEach(dish => {
       if (!byRestaurant.has(dish.restaurantId)) byRestaurant.set(dish.restaurantId, []);
@@ -299,16 +313,117 @@
     return `${parts.slice(0, -1).join(', ')} ${vi ? 'và' : 'and'} ${parts[parts.length - 1]}`;
   };
 
+  // ---------- Booking a table: restaurant, party size, day, and time ----------
+  // The longest restaurant name or alias in the text, e.g. "nonnas" or "little saigon".
+  function findRestaurant(text, restaurants = []) {
+    const words = ` ${normalize(text)} `;
+    let best = null;
+    restaurants.forEach(restaurant => {
+      [restaurant.name, ...(restaurant.aliases || [])].map(normalize).filter(Boolean).forEach(phrase => {
+        if (words.includes(` ${phrase} `) && (!best || phrase.length > best.phrase.length)) best = { restaurant, phrase };
+      });
+    });
+    return best;
+  }
+
+  const PARTY_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, mot: 1, hai: 2, ba: 3, bon: 4, nam: 5, sau: 6, bay: 7, tam: 8, chin: 9, muoi: 10 };
+  // "table for 4", "party of six", "6 people", "đặt bàn 6 người" -> 1 to 12, or null.
+  function parseParty(text) {
+    const words = normalize(text);
+    const patterns = [
+      /\b(?:for|cho|party of|group of|nhom)\s+(\d{1,2}|[a-z]+)(?:\s+(?:people|persons|person|ppl|guests|nguoi|of us))?\b/,
+      /\b(\d{1,2}|[a-z]+)\s+(?:people|persons|ppl|guests|nguoi)\b/
+    ];
+    for (const pattern of patterns) {
+      const match = words.match(pattern);
+      if (!match) continue;
+      const value = /^\d+$/.test(match[1]) ? Number(match[1]) : PARTY_WORDS[match[1]];
+      if (value >= 1 && value <= 12) return value;
+    }
+    return null;
+  }
+
+  const WEEKDAYS = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+  const VI_WEEKDAYS = { 'chu nhat': 0, 'thu hai': 1, 'thu ba': 2, 'thu tu': 3, 'thu nam': 4, 'thu sau': 5, 'thu bay': 6 };
+  const VI_DAY_NAMES = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+  // Day and time from "tomorrow at 7:30pm", "friday 12:30", "7h tối", "lúc 6 giờ chiều mai".
+  // Vietnamese "tối" (evening) and "tôi" (I) look the same without accents, so evening
+  // words are read from the accented text.
+  function parseWhen(rawText, now = new Date()) {
+    const raw = String(rawText || '').toLowerCase();
+    const folded = raw.replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9:]+/g, ' ');
+    let dayOffset = 0;
+    if (/\b(tomorrow|tmrw|ngay mai|toi mai|sang mai|trua mai|chieu mai)\b/.test(folded)) dayOffset = 1;
+    else {
+      const vi = Object.keys(VI_WEEKDAYS).find(key => new RegExp(`\\b${key}\\b`).test(folded));
+      const en = Object.keys(WEEKDAYS).find(key => new RegExp(`\\b${key}\\b`).test(folded));
+      const target = vi ? VI_WEEKDAYS[vi] : en ? WEEKDAYS[en] : null;
+      if (target != null) dayOffset = (target - now.getDay() + 7) % 7;
+    }
+    const evening = /tối|chiều/.test(raw) || /\b(tonight|evening|dinner|toi nay)\b/.test(folded) || /\d\s*(?:h|gio)\s*(?:\d{2})?\s*(?:toi|chieu)\b/.test(folded);
+    const morning = /sáng/.test(raw) || /\b(morning|breakfast)\b/.test(folded) || /\d\s*(?:h|gio)\s*(?:\d{2})?\s*sang\b/.test(folded);
+    const toEvening = hours => (hours < 12 && !morning && (evening || hours <= 10) ? hours + 12 : hours);
+    let hours = null;
+    let minutes = 0;
+    let match;
+    if ((match = folded.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/))) { hours = (Number(match[1]) % 12) + (match[3] === 'pm' ? 12 : 0); minutes = Number(match[2] || 0); }
+    else if ((match = folded.match(/\b(\d{1,2}):(\d{2})\b/))) { hours = Number(match[1]); minutes = Number(match[2]); if (hours < 12 && evening) hours += 12; }
+    else if ((match = folded.match(/\b(\d{1,2})\s*(?:h|gio)(?:\s*(\d{2}))?\b/))) { hours = toEvening(Number(match[1])); minutes = Number(match[2] || 0); }
+    else if ((match = folded.match(/\b(?:at|luc|vao luc|around|khoang)\s+(\d{1,2})\b/))) hours = toEvening(Number(match[1]));
+    else if (/\b(noon|lunch|trua)\b/.test(folded)) hours = 12;
+    else if (/\b(dinner|tonight|toi nay)\b/.test(folded) || /tối/.test(raw)) hours = 19;
+    else if (/\bbrunch\b/.test(folded)) hours = 11;
+    else if (morning) hours = 9;
+    const valid = hours != null && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60;
+    return { dayOffset, minutes: valid ? hours * 60 + minutes : null };
+  }
+
+  function bookingRequest(text, ctx, restaurantMatch, now) {
+    const S = SF.schedule;
+    const party = parseParty(text);
+    const { dayOffset, minutes } = parseWhen(text, now);
+    let restaurant = restaurantMatch ? restaurantMatch.restaurant : null;
+    if (!restaurant) {
+      const prefs = parsePreferences(text, normalize(text));
+      if (prefs.cuisines.length) restaurant = [...(ctx.restaurants || [])].filter(item => prefs.cuisines.some(cuisine => item.cuisine.includes(cuisine))).sort((a, b) => b.rating - a.rating)[0] || null;
+    }
+    let note = '';
+    let timeText = '';
+    const day = S ? S.addDays(S.startOfDay(now), dayOffset) : null;
+    if (S && minutes != null) timeText = S.formatTime(S.at(day, minutes));
+    if (S && restaurant) {
+      const slots = S.tableSlots(restaurant, day, now).map(slot => S.minutesOf(slot));
+      if (!slots.length) note = 'closed';
+      else if (minutes != null && !slots.includes(minutes)) note = 'nearest';
+    }
+    const dayEn = dayOffset === 0 ? 'today' : dayOffset === 1 ? 'tomorrow' : `on ${day ? day.toLocaleDateString('en-US', { weekday: 'long' }) : 'that day'}`;
+    const dayVi = dayOffset === 0 ? 'hôm nay' : dayOffset === 1 ? 'ngày mai' : (day ? VI_DAY_NAMES[day.getDay()] : '');
+    const reply = t => {
+      const en = [`Opening a table${party ? ` for ${party}` : ''}${restaurant ? ` at ${restaurant.name}` : ''}${timeText ? ` ${dayEn} at ${timeText}` : dayOffset ? ` ${dayEn}` : ''}.`];
+      const vi = [`Mình mở form đặt bàn${party ? ` ${party} người` : ''}${restaurant ? ` tại ${restaurant.name}` : ''}${timeText ? ` lúc ${timeText} ${dayVi}` : dayOffset ? ` ${dayVi}` : ''}.`];
+      if (note === 'nearest') { en.push("That exact time isn't open, so the closest time is selected."); vi.push('Giờ đó không còn bàn nên mình chọn giờ gần nhất.'); }
+      if (note === 'closed') { en.push(`${restaurant.name} has no tables that day, so the next open day is selected.`); vi.push(`${restaurant.name} không nhận bàn ngày đó nên mình chọn ngày gần nhất còn bàn.`); }
+      if (!restaurant) { en.push('Pick a restaurant,'); vi.push('Bạn chọn nhà hàng,'); }
+      en.push(restaurant ? 'Check the details and tap Book table.' : 'then check the details and tap Book table.');
+      vi.push(restaurant ? 'Bạn kiểm tra rồi bấm Book table nhé.' : 'rồi kiểm tra và bấm Book table nhé.');
+      return t(en.join(' '), vi.join(' '));
+    };
+    return { restaurant, party, dayOffset, minutes, reply };
+  }
+
   /**
    * @param {string} text  what the person typed
-   * @param {object} ctx   { dishes, cart: [{dishId, quantity}], mode, state, totalsFor(items) }
+   * @param {object} ctx   { dishes, restaurants, cart: [{dishId, quantity}], mode, state, totalsFor(items), now }
    * @returns {{reply:string, actions:object[], dishIds:string[], offer:object|null, showSummary:boolean}}
    */
   function respond(text, ctx) {
     const vi = isVietnamese(text);
     const t = (en, viText) => (vi ? viText : en);
-    const { mentions, freeText } = findMentions(text, ctx.dishes);
+    const restaurantMatch = findRestaurant(text, ctx.restaurants);
+    const dishText = restaurantMatch ? ` ${normalize(text)} `.replace(` ${restaurantMatch.phrase} `, ' ') : text;
+    const { mentions, freeText } = findMentions(dishText, ctx.dishes);
     const free = ` ${freeText} `;
+    const now = ctx.now || new Date();
     const result = { reply: '', actions: [], dishIds: [], offer: null, showSummary: false, language: vi ? 'vi' : 'en' };
     const dishName = id => (ctx.dishes.find(dish => dish.id === id) || {}).name || id;
     const replies = [];
@@ -317,8 +432,13 @@
     const wantsCheckout = /\b(checkout|check out|place (the |my )?order|pay now|proceed to (checkout|payment)|thanh toan|chot don)\b/.test(free);
     const wantsRemove = /\b(remove|delete|take off|drop|minus|cancel|bo|xoa|bot|huy|loai)\b/.test(free);
     const wantsAdd = /\b(add|order|get|want|buy|take|have|give|grab|another|plus|them|dat|lay|mua|goi|cho)\b/.test(free);
-    const wantsPickup = /\b(pick ?up|takeout|carry ?out|tu lay|den lay|tu den lay|lay tai quan|mang ve)\b/.test(free);
-    const wantsDelivery = !wantsPickup && /\b(deliver|delivery|delivered|giao|ship)\b/.test(free);
+    const wantsPickup = /\b(pick ?up|takeout|take out|carry ?out|to go|tu lay|den lay|tu den lay|lay tai quan|mang ve|mang di)\b/.test(free);
+    const wantsDelivery = /\b(deliver|delivery|delivered|giao hang|giao tan noi|giao do an|giao den|ship|shipper)\b/.test(free);
+    const wantsDineIn = /\b(dine ?in|eat (?:in|there|at the restaurant)|an tai quan|an tai cho|an o quan|an tai nha hang|ngoi an)\b/.test(free);
+    const wantsBooking = /\b(book|booking|reserve|reservation|table for|a table|dat ban|dat cho|giu ban|giu cho|dat truoc)\b/.test(free);
+    const wantsCheckin = /\b(check ?in|we re here|we are here|i m here|i am here|da den|den roi|den noi)\b/.test(free);
+    const wantsOrders = /\b(my orders|order history|past orders|previous orders|my reservations?|lich su|don cua toi|don hang cua toi|don da dat)\b/.test(free);
+    const wantsSplit = /\b(split|share the bill|chia tien|chia bill|chia hoa don|chia deu|tra rieng)\b/.test(free);
     const wantsTotal = /\b(total|tax|taxes|how much|cost|bill|tong|thue|bao nhieu|tinh tien)\b/.test(free);
     const wantsHelp = /\b(help|what can you do|giup|huong dan|lam duoc gi)\b/.test(free);
 
@@ -374,15 +494,37 @@
       replies.push(t('Which one did you mean? Here are the options:', 'Bạn muốn món nào? Đây là các lựa chọn:'));
     }
 
-    if (wantsPickup || wantsDelivery) {
-      const mode = wantsPickup ? 'pickup' : 'delivery';
+    if (wantsDelivery) {
+      replies.push(t("SmartFoodie doesn't deliver. You can dine in, book a table, or order ahead and pick it up.", 'SmartFoodie không giao hàng. Bạn có thể ăn tại quán, đặt bàn trước, hoặc đặt món rồi tự đến lấy.'));
+    }
+
+    if (wantsBooking) {
+      const booking = bookingRequest(text, ctx, restaurantMatch, now);
+      if (ctx.mode !== 'reservation') result.actions.push({ type: 'mode', mode: 'reservation' });
+      result.actions.push({ type: 'reserve', restaurantId: booking.restaurant ? booking.restaurant.id : null, party: booking.party, dayOffset: booking.dayOffset, minutes: booking.minutes });
+      replies.push(booking.reply(t));
+    } else if ((wantsPickup || wantsDineIn) && !wantsDelivery) {
+      const mode = wantsPickup ? 'pickup' : 'dinein';
       if (mode !== ctx.mode) {
         result.actions.push({ type: 'mode', mode });
         replies.push(mode === 'pickup'
-          ? t('Switched to pickup: no delivery fee or tip.', 'Đã chuyển sang tự đến lấy: không mất phí giao hàng và tiền tip.')
-          : t('Switched to delivery.', 'Đã chuyển sang giao hàng tận nơi.'));
+          ? t('Switched to pickup: order ahead and pick it up when it is ready.', 'Đã chuyển sang tự đến lấy: đặt trước rồi đến lấy khi món xong.')
+          : t('Switched to dine-in: check in when you arrive and your food is served at the table.', 'Đã chuyển sang ăn tại quán: check-in khi đến nơi, món sẽ được mang ra bàn.'));
       }
       result.showSummary = result.showSummary || cart.length > 0;
+    }
+
+    if (wantsCheckin && !wantsBooking) {
+      result.actions.push({ type: 'checkin' });
+      replies.push(t('Opening check-in for your next table. Tap each friend as they arrive, then check in your group.', 'Đang mở check-in cho bàn sắp tới. Chạm vào tên từng bạn khi họ đến, rồi check-in cả nhóm.'));
+    }
+    if (wantsSplit) {
+      result.actions.push({ type: 'split' });
+      replies.push(t('Opening the bill splitter. Split evenly or by who had what, then share each person\'s amount.', 'Đang mở phần chia tiền. Chia đều hoặc theo món từng người gọi, rồi gửi số tiền cho mỗi người.'));
+    }
+    if (wantsOrders && !wantsSplit && !wantsCheckin) {
+      result.actions.push({ type: 'orders' });
+      replies.push(t('Here are your orders and reservations.', 'Đây là các đơn và lịch đặt bàn của bạn.'));
     }
 
     if (wantsCheckout) {
@@ -394,7 +536,7 @@
       }
     }
 
-    if (wantsTotal && !wantsCheckout && !result.priceAnswered) {
+    if (wantsTotal && !wantsCheckout && !wantsSplit && !result.priceAnswered) {
       if (cart.length) { replies.push(t("Here's your current total:", 'Tổng đơn hiện tại của bạn:')); result.showSummary = true; }
       else replies.push(t('Your order is empty, so the total is $0.00.', 'Đơn hàng đang trống nên tổng là $0.00.'));
     }
@@ -405,8 +547,8 @@
     }
 
     if (wantsHelp) {
-      result.reply = t('I can recommend dishes, plan a meal for a group, add or remove items, switch delivery or pickup, and show your total with tax. Try "add 2 pho", "something spicy under $15", or "dinner for 3 under $50".',
-        'Mình có thể gợi ý món, lên thực đơn cho nhóm, thêm/bớt món, chuyển giao hàng hoặc tự lấy, và tính tổng tiền kèm thuế. Thử: "thêm 2 phở", "món cay dưới $15", hoặc "bữa tối cho 3 người dưới $50".');
+      result.reply = t('I can recommend dishes, plan a meal for a group, book a table, switch between dine-in and pickup, check in your group, split the bill, and show your total with tax. Try "book a table for 4 at 7pm", "add 2 pho", or "dinner for 3 under $50".',
+        'Mình có thể gợi ý món, lên thực đơn cho nhóm, đặt bàn, chuyển giữa ăn tại quán và tự đến lấy, check-in cho nhóm, chia tiền, và tính tổng tiền kèm thuế. Thử: "đặt bàn 4 người lúc 7h tối", "thêm 2 phở", hoặc "bữa tối cho 3 người dưới $50".');
       return result;
     }
 
@@ -431,7 +573,7 @@
       }
     }
 
-    const { dishes: picks, notes } = recommend(ctx.dishes, prefs, 3);
+    const { dishes: picks, notes } = recommend(ctx.dishes, prefs, 3, ctx);
     result.dishIds = picks.map(dish => dish.id);
     let opening = t('Here are a few tasty matches:', 'Đây là vài món hợp với yêu cầu của bạn:');
     if (prefs.moods.includes('drink')) opening = t('Something to sip? These drinks are customer favorites:', 'Muốn uống gì đó? Đây là vài đồ uống được yêu thích:');
@@ -446,10 +588,14 @@
     if (notes.includes('price')) extra.push(t(`Nothing matched under $${prefs.maxPrice}, so these are the closest picks.`, `Không có món nào dưới $${prefs.maxPrice}, đây là các món gần nhất.`));
     if (notes.includes('time')) extra.push(t(`Nothing is ready within ${prefs.maxPrep} minutes, so these are the fastest options.`, `Không có món nào xong trong ${prefs.maxPrep} phút, đây là các món nhanh nhất.`));
     if (notes.includes('cuisine')) extra.push(t("That cuisine isn't on the menu yet, so here are similar favorites.", 'Thực đơn chưa có món theo kiểu này, đây là các món tương tự.'));
+    if (notes.includes('open')) extra.push(t('Nothing that matches is open right now, so these are for later (book a table or schedule a pickup).', 'Hiện chưa có quán nào phù hợp đang mở cửa, đây là gợi ý cho lúc khác (đặt bàn hoặc hẹn giờ lấy).'));
+    else if (prefs.openNow) extra.push(t('All open now.', 'Tất cả đang mở cửa.'));
+    if (notes.includes('distance')) extra.push(t(`Nothing matched within ${prefs.maxDistance} mi, so these are a bit farther.`, `Không có món phù hợp trong vòng ${prefs.maxDistance} dặm, đây là các món xa hơn một chút.`));
+    else if (prefs.maxDistance) extra.push(t(`All within ${prefs.maxDistance} mi.`, `Tất cả trong vòng ${prefs.maxDistance} dặm.`));
     result.reply = [opening, ...extra].join(' ');
     return result;
   }
 
-  SF.assistant = { normalize, findMentions, parsePreferences, recommend, planMeal, respond, isVietnamese };
+  SF.assistant = { normalize, findMentions, parsePreferences, recommend, planMeal, respond, isVietnamese, findRestaurant, parseParty, parseWhen };
   if (typeof module !== 'undefined' && module.exports) module.exports = SF;
 })(typeof window !== 'undefined' ? window : globalThis);

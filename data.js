@@ -67,22 +67,48 @@
   // Original dishes that are starters; every other original dish is a main.
   const ORIGINAL_APPETIZERS = new Set(['xiao-long-bao', 'veg-samosas', 'loaded-fries', 'buffalo-wings']);
 
+  // How people can eat: dine in now, book a table for later, or order ahead and pick up.
+  // Change a label here to rename that option everywhere on the site.
+  SF.MODES = {
+    dinein: { id: 'dinein', label: 'Dine-in', icon: 'dine', tipDefault: 18, tipLabel: 'Tip for your server', tipNote: 'Tips go to the restaurant team who serve your table.' },
+    reservation: { id: 'reservation', label: 'Reservation', icon: 'calendar', tipDefault: 18, tipLabel: 'Tip for your server', tipNote: 'Only charged on a pre-order. Tips go to the restaurant team who serve your table.' },
+    pickup: { id: 'pickup', label: 'Pickup', icon: 'bag', tipDefault: 0, tipLabel: 'Tip the kitchen team', tipNote: 'Optional. Tips go to the restaurant team who prepare your order.' }
+  };
+  SF.MODE_ORDER = ['dinein', 'reservation', 'pickup'];
+
+  // distance: miles from you (demo values). hours: 'HH:MM-HH:MM' per day, comma-separated for
+  // split shifts; 'all' covers every day not listed; a closing time before the opening time runs
+  // past midnight. Hours are in the visitor's local time.
   SF.restaurants = [
-    { id: 'little-saigon', name: 'Little Saigon Noodle Bar', cuisine: 'Vietnamese', rating: 4.8, ratingCount: 1260, eta: [20, 30], deliveryFee: 1.49, priceLevel: '$$', image: 'u:1582878826629-29b7ad1cdc43', tagline: 'Slow-simmered broths and Saigon street food' },
-    { id: 'spice-route', name: 'Spice Route Kitchen', cuisine: 'Thai · Indonesian', rating: 4.7, ratingCount: 684, eta: [25, 35], deliveryFee: 1.99, priceLevel: '$$', image: 'u:1455619452474-d2be8b1e70cd', tagline: 'Curries, noodles, and bright Southeast Asian flavors' },
-    { id: 'tokyo-bento', name: 'Tokyo Bento', cuisine: 'Japanese', rating: 4.7, ratingCount: 942, eta: [20, 30], deliveryFee: 2.49, priceLevel: '$$', image: 'u:1557872943-16a5ac26437e', tagline: 'Ramen, sushi, and bento boxes' },
-    { id: 'seoul-bowl', name: 'Seoul Bowl', cuisine: 'Korean', rating: 4.8, ratingCount: 731, eta: [20, 30], deliveryFee: 1.99, priceLevel: '$$', image: 'u:1590301157890-4810ed352733', tagline: 'Bibimbap, bulgogi, and crispy Korean fried chicken' },
-    { id: 'wok-and-roll', name: 'Wok & Roll', cuisine: 'Chinese', rating: 4.6, ratingCount: 1105, eta: [15, 25], deliveryFee: 0.99, priceLevel: '$', image: 'u:1563245372-f21724e3856d', tagline: 'Wok-fired classics and handmade dumplings' },
-    { id: 'curry-corner', name: 'Curry Corner', cuisine: 'Indian', rating: 4.5, ratingCount: 856, eta: [25, 35], deliveryFee: 1.49, priceLevel: '$$', image: 'u:1589302168068-964664d93dc0', tagline: 'Curries, biryani, and street snacks' },
-    { id: 'burger-bench', name: 'Burger Bench', cuisine: 'American · Fast food', rating: 4.6, ratingCount: 2034, eta: [10, 20], deliveryFee: 0.99, priceLevel: '$', image: 'u:1568901346375-23c9450c58cd', tagline: 'Classic burgers and crispy sandwiches' },
-    { id: 'golden-bird', name: 'Golden Bird Kitchen', cuisine: 'American · Fried chicken', rating: 4.5, ratingCount: 1477, eta: [15, 25], deliveryFee: 0.99, priceLevel: '$', image: 'u:1626645738196-c2a7c87a8f58', tagline: 'Southern-style fried chicken' },
-    { id: 'stackhouse', name: 'Stackhouse Grill', cuisine: 'American · BBQ', rating: 4.3, ratingCount: 1188, eta: [20, 30], deliveryFee: 1.99, priceLevel: '$$', image: 'u:1544025162-d76694265947', tagline: 'Smash burgers, ribs, and wings' },
-    { id: 'green-fork', name: 'Green Fork Express', cuisine: 'American · Healthy', rating: 4.7, ratingCount: 903, eta: [15, 25], deliveryFee: 1.49, priceLevel: '$$', image: 'u:1505576399279-565b52d4ac71', tagline: 'Grain bowls and big fresh salads' },
-    { id: 'taco-trail', name: 'Taco Trail', cuisine: 'Mexican · Fast food', rating: 4.4, ratingCount: 1320, eta: [10, 20], deliveryFee: 0.99, priceLevel: '$', image: 'u:1512838243191-e81e8f66f1fd', tagline: 'Quick tacos and burritos' },
-    { id: 'casa-verde', name: 'Casa Verde Cocina', cuisine: 'Mexican', rating: 4.7, ratingCount: 642, eta: [20, 30], deliveryFee: 1.99, priceLevel: '$$', image: 'u:1599974579688-8dbdd335c77f', tagline: 'Street tacos, carnitas, and quesadillas' },
-    { id: 'nonnas', name: "Nonna's Pasta & Pizza", cuisine: 'Italian', rating: 4.8, ratingCount: 1015, eta: [25, 35], deliveryFee: 2.49, priceLevel: '$$', image: 'u:1574071318508-1cdbab80d002', tagline: 'Fresh pasta and wood-fired pizza' },
-    { id: 'olive-ember', name: 'Olive & Ember', cuisine: 'Mediterranean · Middle Eastern', rating: 4.7, ratingCount: 588, eta: [20, 30], deliveryFee: 1.99, priceLevel: '$$', image: 'u:1534080564583-6be75777b70a', tagline: 'Shawarma, falafel, paella, and shakshuka' }
+    { id: 'little-saigon', name: 'Little Saigon Noodle Bar', cuisine: 'Vietnamese', rating: 4.8, ratingCount: 1260, distance: 0.4, hours: { all: '10:30-21:30', fri: '10:30-22:30', sat: '10:30-22:30' }, priceLevel: '$$', image: 'u:1582878826629-29b7ad1cdc43', tagline: 'Slow-simmered broths and Saigon street food', aliases: ['little saigon', 'saigon'] },
+    { id: 'spice-route', name: 'Spice Route Kitchen', cuisine: 'Thai · Indonesian', rating: 4.7, ratingCount: 684, distance: 1.2, hours: { all: '11:00-21:30', mon: 'closed' }, priceLevel: '$$', image: 'u:1455619452474-d2be8b1e70cd', tagline: 'Curries, noodles, and bright Southeast Asian flavors', aliases: ['spice route'] },
+    { id: 'tokyo-bento', name: 'Tokyo Bento', cuisine: 'Japanese', rating: 4.7, ratingCount: 942, distance: 0.7, hours: { all: '11:00-22:00' }, priceLevel: '$$', image: 'u:1557872943-16a5ac26437e', tagline: 'Ramen, sushi, and bento boxes', aliases: ['tokyo bento', 'tokyo'] },
+    { id: 'seoul-bowl', name: 'Seoul Bowl', cuisine: 'Korean', rating: 4.8, ratingCount: 731, distance: 0.9, hours: { all: '11:00-22:00', fri: '11:00-24:00', sat: '11:00-24:00' }, priceLevel: '$$', image: 'u:1590301157890-4810ed352733', tagline: 'Bibimbap, bulgogi, and crispy Korean fried chicken', aliases: ['seoul bowl', 'seoul'] },
+    { id: 'wok-and-roll', name: 'Wok & Roll', cuisine: 'Chinese', rating: 4.6, ratingCount: 1105, distance: 0.3, hours: { all: '10:30-23:00' }, priceLevel: '$', image: 'u:1563245372-f21724e3856d', tagline: 'Wok-fired classics and handmade dumplings', aliases: ['wok and roll', 'wok n roll', 'wok roll'] },
+    { id: 'curry-corner', name: 'Curry Corner', cuisine: 'Indian', rating: 4.5, ratingCount: 856, distance: 2.4, hours: { all: '11:30-14:30,17:00-22:00' }, priceLevel: '$$', image: 'u:1589302168068-964664d93dc0', tagline: 'Curries, biryani, and street snacks', aliases: ['curry corner'] },
+    { id: 'burger-bench', name: 'Burger Bench', cuisine: 'American · Fast food', rating: 4.6, ratingCount: 2034, distance: 0.2, hours: { all: '10:00-01:00', fri: '10:00-02:00', sat: '10:00-02:00' }, priceLevel: '$', image: 'u:1568901346375-23c9450c58cd', tagline: 'Classic burgers and crispy sandwiches, open late', aliases: ['burger bench'] },
+    { id: 'golden-bird', name: 'Golden Bird Kitchen', cuisine: 'American · Fried chicken', rating: 4.5, ratingCount: 1477, distance: 1.6, hours: { all: '10:30-22:00' }, priceLevel: '$', image: 'u:1626645738196-c2a7c87a8f58', tagline: 'Southern-style fried chicken', aliases: ['golden bird'] },
+    { id: 'stackhouse', name: 'Stackhouse Grill', cuisine: 'American · BBQ', rating: 4.3, ratingCount: 1188, distance: 3.1, hours: { all: '11:00-22:00', fri: '11:00-23:00', sat: '11:00-23:00' }, priceLevel: '$$', image: 'u:1544025162-d76694265947', tagline: 'Smash burgers, ribs, and wings', aliases: ['stackhouse', 'stack house'] },
+    { id: 'green-fork', name: 'Green Fork Express', cuisine: 'American · Healthy', rating: 4.7, ratingCount: 903, distance: 0.5, hours: { all: '07:00-20:00', sat: '08:00-16:00', sun: '08:00-16:00' }, priceLevel: '$$', image: 'u:1505576399279-565b52d4ac71', tagline: 'Breakfast, grain bowls, and big fresh salads', aliases: ['green fork'] },
+    { id: 'taco-trail', name: 'Taco Trail', cuisine: 'Mexican · Fast food', rating: 4.4, ratingCount: 1320, distance: 0.6, hours: { all: '09:00-24:00' }, priceLevel: '$', image: 'u:1512838243191-e81e8f66f1fd', tagline: 'Quick tacos and burritos', aliases: ['taco trail'] },
+    { id: 'casa-verde', name: 'Casa Verde Cocina', cuisine: 'Mexican', rating: 4.7, ratingCount: 642, distance: 1.9, hours: { all: '11:00-22:00', sun: '10:00-21:00' }, priceLevel: '$$', image: 'u:1599974579688-8dbdd335c77f', tagline: 'Street tacos, carnitas, and quesadillas', aliases: ['casa verde'] },
+    { id: 'nonnas', name: "Nonna's Pasta & Pizza", cuisine: 'Italian', rating: 4.8, ratingCount: 1015, distance: 2.8, hours: { all: '11:30-22:00', fri: '11:30-23:00', sat: '11:30-23:00' }, priceLevel: '$$', image: 'u:1574071318508-1cdbab80d002', tagline: 'Fresh pasta and wood-fired pizza', aliases: ['nonna', 'nonnas', 'nonna s'] },
+    { id: 'olive-ember', name: 'Olive & Ember', cuisine: 'Mediterranean · Middle Eastern', rating: 4.7, ratingCount: 588, distance: 4.5, hours: { all: '08:00-21:00' }, priceLevel: '$$', image: 'u:1534080564583-6be75777b70a', tagline: 'Shawarma, falafel, paella, and shakshuka', aliases: ['olive and ember', 'olive ember'] }
   ];
+
+  // Meal times for dishes that aren't served all day. Every other dish is served whenever its
+  // restaurant is open.
+  SF.MEAL_WINDOWS = {
+    breakfast: { label: 'Breakfast', from: '07:00', to: '11:30' },
+    brunch: { label: 'Brunch', from: '08:00', to: '15:00' },
+    lunch: { label: 'Lunch special', from: '11:00', to: '15:00' },
+    dinner: { label: 'Dinner', from: '17:00', to: '24:00' }
+  };
+  const DISH_WINDOWS = {
+    'berry-pancakes': 'breakfast', 'blueberry-oatmeal': 'breakfast', 'shakshuka': 'brunch',
+    'teriyaki-bento': 'lunch', 'chicken-taco-pair': 'lunch',
+    'ribeye-steak': 'dinner', 'seafood-paella': 'dinner', 'galbi': 'dinner'
+  };
 
   // [id, name, restaurantId, cuisine, price, rating, ratingCount, prepMinutes, diet, spicy(0-2), tags, image, description, ingredients, aliases, isNew]
   const DISH_ROWS = [
@@ -152,27 +178,27 @@
     'bun-bo-hue': [[5, 'Proper heat and a deep lemongrass broth. The thick noodles have a great chew.'], [5, 'Spicy, savory, and hearty. Exactly what I was craving.'], [4, "Loved it, but it's quite spicy. Ask for the chili oil on the side if you're sensitive."]],
     'chicken-vermicelli': [[5, 'Lemongrass chicken, fresh herbs, and nuoc cham. Light and bright.'], [4, 'Great mix of textures. Pour all the sauce in!']],
     'banh-mi': [[5, 'Crackly baguette, savory pork, pâté, and fresh pickles. Textbook banh mi.'], [5, 'Fast, affordable, and so good. The cilantro and chili make it pop.'], [4, 'Delicious. Ask for extra pickled carrots if you like it tangy.']],
-    'pad-thai': [[5, 'The tamarind sauce is balanced: sweet, sour, and not too sticky.'], [4, 'Plump shrimp and plenty of peanuts. Arrived still hot.'], [5, 'My go-to lunch. The squeeze of lime makes it.']],
+    'pad-thai': [[5, 'The tamarind sauce is balanced: sweet, sour, and not too sticky.'], [4, 'Plump shrimp and plenty of peanuts. Came out piping hot.'], [5, 'My go-to lunch. The squeeze of lime makes it.']],
     'red-curry': [[5, 'Coconut-rich and properly spicy, with tender chicken and bamboo shoots.'], [4, "Great depth of flavor. I'd order it medium-spicy next time."], [5, 'Pairs perfectly with the jasmine rice. Big portion.']],
     'tom-yum': [[5, 'Hot, sour, and fragrant with lemongrass and lime leaf. The shrimp were plump.'], [5, 'Clears your head in the best way. Authentic flavor.'], [4, 'Excellent broth. A bit spicy for me, but I finished it all.']],
     'gado-gado': [[5, 'Crunchy vegetables and a rich peanut dressing. Filling but light.'], [4, 'Love the tofu and tempeh. Dressing on the side keeps it crisp.'], [5, 'One of the best healthy lunches around.']],
     'chirashi': [[5, 'The fish is fresh and beautifully cut. The rice is seasoned just right.'], [5, 'Feels like a treat: salmon, tuna, and tamago over sushi rice.'], [4, 'Excellent quality. A little more ginger would have been nice.']],
     'salmon-sushi-set': [[5, 'Fresh salmon nigiri and rolls, neatly packed.'], [4, 'Good quality for the price.']],
     'teriyaki-bento': [[5, 'Glossy teriyaki chicken, rice, and sides. A balanced lunch box.'], [4, 'Tasty and filling. The sauce is a little sweet.']],
-    'tonkotsu-ramen': [[5, 'Creamy pork broth, melt-in-your-mouth chashu, and a perfectly jammy egg.'], [5, 'The noodles stayed firm even with delivery. Very impressive.'], [4, 'Rich and comforting. Add the chili oil for an extra kick.']],
+    'tonkotsu-ramen': [[5, 'Creamy pork broth, melt-in-your-mouth chashu, and a perfectly jammy egg.'], [5, 'The noodles stayed firm to the last bite. Very impressive.'], [4, 'Rich and comforting. Add the chili oil for an extra kick.']],
     'chicken-katsu': [[5, 'Super crispy panko crust, juicy chicken, and tangy katsu sauce.'], [4, 'Great crunch. The shredded cabbage keeps it fresh.'], [5, 'Comfort food done right. The kids loved it too.']],
     'bulgogi-bowl': [[5, 'Tender marinated beef with a hint of pear and sesame.'], [5, 'Huge bowl, and great with kimchi.']],
     'tofu-bibimbap': [[5, 'Colorful vegetables, crispy tofu, and gochujang. Mix it all up!'], [4, 'Healthy and satisfying. The egg was perfectly runny.']],
-    'korean-fried-chicken': [[5, 'Shatteringly crisp and double-fried, with a sweet-spicy gochujang glaze.'], [5, 'Stayed crunchy after a 20-minute drive. Seriously good.'], [4, 'Addictive sauce. Grab extra napkins.']],
+    'korean-fried-chicken': [[5, 'Shatteringly crisp and double-fried, with a sweet-spicy gochujang glaze.'], [5, 'Still crunchy when I got it home after pickup. Seriously good.'], [4, 'Addictive sauce. Grab extra napkins.']],
     'chow-mein': [[4, 'Wok-tossed noodles with a nice smoky flavor.'], [5, 'Quick, hot, and full of vegetables.']],
     'veg-fried-rice': [[4, 'Fluffy rice and not greasy. A solid side or main.'], [5, 'Simple and comforting, with real wok flavor.']],
-    'xiao-long-bao': [[5, 'Delicate wrappers and hot, savory soup inside. Bite carefully!'], [5, "Best soup dumplings I've had delivered. The ginger vinegar is a must."], [4, 'Very good. One dumpling broke in transit, but the flavor was excellent.']],
+    'xiao-long-bao': [[5, 'Delicate wrappers and hot, savory soup inside. Bite carefully!'], [5, "Best soup dumplings near campus. The ginger vinegar is a must."], [4, 'Very good. One dumpling broke in the steamer, but the flavor was excellent.']],
     'orange-chicken': [[5, 'Crispy chicken in a bright, citrusy sauce. Better than the chains.'], [4, 'Sweet and tangy with real orange zest. Great with steamed rice.'], [5, 'Generous portion, and the leftovers reheated well.']],
     'butter-chicken': [[5, 'Silky, buttery sauce with tender chicken. The rice soaks it up perfectly.'], [5, 'Mild but full of flavor. A hit with my kids too.'], [4, "Really good. I'd add naan to the order next time."]],
     'tikka-masala': [[5, 'Smoky chicken tikka in a creamy, spiced tomato sauce.'], [4, 'Great flavor. Order it with garlic naan.']],
     'chana-masala': [[5, 'Hearty chickpeas in a tangy, spiced gravy. A great vegan pick.'], [4, 'Comforting and filling, with mild heat.']],
     'chicken-biryani': [[5, 'Fragrant basmati, tender chicken, and whole spices in every bite.'], [5, 'Comes with cooling raita that balances the heat.'], [4, 'Delicious and filling. Mildly spicy, so ask for extra heat if you like.']],
-    'veg-samosas': [[5, 'Flaky, golden pastry with a well-spiced potato and pea filling.'], [4, 'Great starter. The tamarind and mint chutneys are excellent.'], [5, 'Crisp even after delivery. I order these every time.']],
+    'veg-samosas': [[5, 'Flaky, golden pastry with a well-spiced potato and pea filling.'], [4, 'Great starter. The tamarind and mint chutneys are excellent.'], [5, 'Crisp and hot from the fryer. I order these every time.']],
     'cheeseburger': [[5, 'Classic and juicy, with melted American cheese.'], [4, 'Quick and reliable. Good value.']],
     'crispy-chicken-sandwich': [[5, 'Crunchy chicken, tangy slaw, and a soft brioche bun.'], [4, 'Big sandwich. A little messy, but tasty.']],
     'two-piece-meal': [[4, 'Crispy, well-seasoned chicken. The sides were warm.'], [5, 'Juicy inside, crunchy outside. My fried chicken fix.']],
@@ -180,7 +206,7 @@
     'smash-burger': [[5, 'Lacy, crispy edges on the patties. Seriously good.'], [4, 'Messy in the best way. Bring napkins.']],
     'loaded-fries': [[4, 'Cheesy, crispy, and great for sharing.'], [4, 'Good snack. Best eaten right away.']],
     'bbq-ribs': [[5, 'Fall-off-the-bone tender with a smoky, sticky glaze.'], [5, 'Real smoke ring and great bark. Worth every penny.'], [4, 'Excellent ribs. The sauce is on the sweeter side.']],
-    'buffalo-wings': [[5, 'Crispy skin, tangy-hot buffalo sauce, and cool ranch on the side.'], [4, 'Proper heat. The celery sticks were fresh and crunchy.'], [5, 'A game-day favorite. Arrived hot and saucy.']],
+    'buffalo-wings': [[5, 'Crispy skin, tangy-hot buffalo sauce, and cool ranch on the side.'], [4, 'Proper heat. The celery sticks were fresh and crunchy.'], [5, 'A game-day favorite. Came out hot and saucy.']],
     'grain-bowl': [[5, 'Grilled chicken, grains, and crunchy vegetables with a lemony dressing.'], [5, 'Healthy without being boring.']],
     'harvest-salad': [[5, 'Fresh greens, fruit, and feta. Light and refreshing.'], [4, 'Nice salad. Dressing on the side keeps it crisp.']],
     'chicken-taco-pair': [[4, 'Quick, tasty, and affordable.'], [5, 'Great salsa and fresh toppings.']],
@@ -190,7 +216,7 @@
     'chicken-quesadilla': [[5, 'Golden and crisp outside, with gooey cheese and seasoned chicken inside.'], [4, 'Comes with sour cream and pico. An easy, tasty lunch.'], [5, 'Kids and adults were both happy. Great value.']],
     'penne-pomodoro': [[5, 'Simple, bright tomato sauce with fresh basil. The pasta was al dente.'], [4, "Comforting and light. Add the parmesan; it's worth it."], [5, 'Tastes homemade. A great vegetarian option.']],
     'bolognese': [[5, 'Slow-cooked meat sauce with real depth. Tastes like Sunday dinner.'], [5, 'Perfect pasta texture and plenty of parmesan.'], [4, 'Hearty and delicious. A touch more sauce would be ideal.']],
-    'margherita': [[5, 'Blistered crust, sweet tomatoes, and fresh mozzarella.'], [5, 'Simple and perfect. Still crisp when it arrived.'], [4, "Lovely pizza. I'd add a drizzle of chili oil."]],
+    'margherita': [[5, 'Blistered crust, sweet tomatoes, and fresh mozzarella.'], [5, 'Simple and perfect. Straight from the wood-fired oven.'], [4, "Lovely pizza. I'd add a drizzle of chili oil."]],
     'shawarma-wrap': [[5, 'Juicy spiced chicken, garlic sauce, and pickles, wrapped tight.'], [5, 'The garlic sauce is incredible. A great lunch.'], [4, 'Tasty and filling. A bit messy to eat in the car!']],
     'falafel-plate': [[5, 'Crunchy outside, fluffy and herby inside. The hummus is super smooth.'], [5, 'A satisfying vegan meal with lots of fresh salad.'], [4, 'Great flavor. I would love a second pita.']],
     'seafood-paella': [[5, 'Saffron rice with a crispy bottom, plus mussels, shrimp, and calamari.'], [5, 'Feels like a special-occasion dish. I shared it with a friend.'], [4, 'Delicious, though it takes a little longer to prepare.']],
@@ -218,14 +244,14 @@
     'A convenient lunch stop with plenty of flavor.',
     'The seasoning was excellent, and the order was easy to customize.',
     'Good value for a quick meal. The staff were welcoming too.',
-    'Fresh ingredients and a nice balance of flavors.',
+    'Booked a table for six. We checked in as a group and were seated right away.',
     'My order came out quickly and tasted great.',
-    'A comforting meal with generous portions.',
+    'Splitting the bill four ways was easy. Great spot for a study-group dinner.',
     'The menu has good options, and my food was cooked just right.',
     'Quick service, clean presentation, and a delicious meal.',
     'Everything tasted well prepared. I will be back.',
     'The flavors were spot on, and the staff were helpful.',
-    'Nice quality for the price, with a short wait.',
+    'Pre-ordered with my reservation, and the food hit the table a few minutes after we sat down.',
     'The meal was flavorful and the pickup process was smooth.'
   ];
 
@@ -252,15 +278,18 @@
     }
   ));
 
+  // Review ages are spread over the last 40 days, so a few reviews are always from today.
+  const MINUTES_PER_DAY = 1440;
   SF.dishes = [...originalDishes, ...addedDishes].map(({ reviewRows, ...dish }, dishIndex) => ({
     ...dish,
     aliases: dish.aliases || [],
     isNew: Boolean(dish.isNew),
+    window: DISH_WINDOWS[dish.id] || null,
     imageAlt: `${dish.name}: ${dish.description.charAt(0).toLowerCase()}${dish.description.slice(1).replace(/\.$/, '')}`,
     reviews: reviewRows.map(([stars, text], reviewIndex) => ({
       name: nextReviewer(),
       rating: stars,
-      daysAgo: 1 + ((dishIndex * 5 + reviewIndex * 9) % 45),
+      ageMinutes: 25 + ((dishIndex * 1301 + reviewIndex * 3907) % (MINUTES_PER_DAY * 40)),
       text
     }))
   }));
@@ -273,9 +302,9 @@
     restaurant.reviews = Array.from({ length: count }, (_, reviewIndex) => ({
       name: nextReviewer(),
       rating: reviewIndex % 4 === 3 ? 4 : 5,
-      daysAgo: 1 + ((index * 7 + reviewIndex * 4) % 60),
+      ageMinutes: 40 + ((index * 2311 + reviewIndex * 1777) % (MINUTES_PER_DAY * 50)),
       text: RESTAURANT_COMMENTS[(index * 3 + reviewIndex) % RESTAURANT_COMMENTS.length]
-    }));
+    })).sort((a, b) => a.ageMinutes - b.ageMinutes);
     restaurant.dishIds = SF.dishes.filter(dish => dish.restaurantId === restaurant.id).map(dish => dish.id);
   });
 

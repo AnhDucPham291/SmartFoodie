@@ -2,6 +2,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import socket
 import threading
 import time
@@ -36,11 +37,20 @@ def get_lan_ip():
 
 
 # ---------------------------------------------------------------------------
-# AI ordering assistant (Claude). The browser sends the chat, the menu, and the
-# current cart; Claude answers and calls tools. Tool calls are validated here and
-# returned to the browser as actions, which the page applies to the real cart.
-# Claude can never place an order: open_checkout only opens the checkout screen.
+# AI ordering assistant (Claude). The browser sends the chat, the menu, the
+# restaurants, and the current cart; Claude answers and calls tools. Tool calls
+# are validated here and returned to the browser as actions, which the page
+# applies to the real cart. Claude can never place an order or book a table:
+# open_checkout and book_table only open the screen the customer confirms on.
+# SmartFoodie offers dine-in, reservations, and pickup. There is no delivery.
 # ---------------------------------------------------------------------------
+
+MODES = {"dinein": "dine-in", "reservation": "reservation (table booked for later)", "pickup": "pickup"}
+SCREENS = {"orders": "orders", "check_in": "checkin", "split_bill": "split"}
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+TIME_RE = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
+NULLABLE_STRING = {"anyOf": [{"type": "string"}, {"type": "null"}]}
+
 
 def _tool(name, description, properties, required):
     return {
@@ -63,25 +73,39 @@ TOOLS = [
           "Use it whenever you recommend or talk about specific dishes.",
           {"dish_ids": {"type": "array", "items": {"type": "string"}}},
           ["dish_ids"]),
-    _tool("set_fulfillment", "Switch the order between delivery and pickup.",
-          {"mode": {"type": "string", "enum": ["delivery", "pickup"]}},
+    _tool("set_fulfillment", "Switch how the customer eats: dinein (order now, check in at the restaurant, food served at the table), "
+          "reservation (book a table for later, with an optional pre-order), or pickup (order ahead and collect it). There is no delivery.",
+          {"mode": {"type": "string", "enum": list(MODES)}},
           ["mode"]),
-    _tool("open_checkout", "Open the checkout screen so the customer can review the total with tax and place the order themselves.", {}, []),
+    _tool("book_table", "Open the table booking form, prefilled. The customer checks the details and confirms the booking themselves. "
+          "If the requested time is not open, the form picks the closest open time.",
+          {"restaurant_id": {**NULLABLE_STRING, "description": "Exact restaurant id from the restaurant list, or null to let the customer choose."},
+           "party_size": {"type": "integer", "description": "Number of people, 1-12."},
+           "date": {**NULLABLE_STRING, "description": "Local date as YYYY-MM-DD (today's date is in the app state), or null for today."},
+           "time": {**NULLABLE_STRING, "description": "Local 24-hour time as HH:MM, or null to pick the first open time."}},
+          ["restaurant_id", "party_size", "date", "time"]),
+    _tool("open_screen", "Open one of the customer's screens: orders (order history and reservations), check_in (group check-in "
+          "for the next dine-in order or reservation), or split_bill (split the latest bill evenly or by item).",
+          {"screen": {"type": "string", "enum": list(SCREENS)}},
+          ["screen"]),
+    _tool("open_checkout", "Open checkout (or, for a reservation, the booking form) so the customer can review the total with tax and confirm themselves.", {}, []),
 ]
 
-SYSTEM_PROMPT = """You are SmartFoodie's ordering assistant, built into a food-ordering website. The site is a demo: orders are not sent to real restaurants and no payment is taken.
+SYSTEM_PROMPT = """You are SmartFoodie's assistant, built into a website for eating out near campus. Customers can dine in (order from their phone, check in when they arrive, and get served at the table), book a table for later (a reservation, with an optional pre-order served when they sit down), or order ahead for pickup. There is no delivery: if someone asks for it, say so and offer pickup or dine-in instead. The site is a demo: orders and reservations are not sent to real restaurants and no payment is taken.
 
-Help the customer decide what to eat and build their order with your tools:
+Help the customer decide what to eat and set up their visit with your tools:
 - add_to_cart, remove_from_cart, and clear_cart change the order. Use only dish_id values from the menu below.
 - show_dishes displays dish cards. Use it whenever you recommend or mention specific dishes.
-- set_fulfillment switches between delivery and pickup. Pickup has no delivery fee and no tip.
-- open_checkout opens checkout when the customer is ready. You cannot place orders or take payment; the customer confirms in the app.
+- set_fulfillment switches between dinein, reservation, and pickup.
+- book_table opens the booking form prefilled with a restaurant, party size, date, and time. Use restaurant ids from the restaurant list and dates relative to today's date in the app state.
+- open_screen opens the customer's orders, group check-in, or bill splitter.
+- open_checkout opens checkout when the customer is ready. You cannot place orders, book tables, or take payment; the customer confirms in the app.
 
-Pricing: menu prices are in US dollars. At checkout the app adds a delivery fee per restaurant (delivery only), a 5% service fee (minimum $1, maximum $5), a $2 small-order fee when the food subtotal is under $10, sales tax on the food subtotal at the state rate given in the app state, and an optional tip. The app shows the exact breakdown under your reply, so do not calculate a final total yourself; you may give rough estimates and mention the tax rate. Treat a customer's budget as the total they want to pay, so leave room for tax and fees.
+Pricing: menu prices are in US dollars. At checkout the app adds a 5% service fee (minimum $1, maximum $5), a $2 small-order fee when the food subtotal is under $10, sales tax on the food subtotal at the state rate given in the app state, and an optional tip for the restaurant team. A reservation without a pre-order costs nothing. The app shows the exact breakdown under your reply, so do not calculate a final total yourself; you may give rough estimates and mention the tax rate. Treat a customer's budget as the total they want to pay, so leave room for tax and fees. Groups can split the bill in the app, evenly or by who had what.
 
-Recommend only dishes from the menu, matching cravings, diet, spice level, budget, and time. Allergen information is not verified, so suggest checking with the restaurant when allergies come up.
+Recommend only dishes from the menu, matching cravings, diet, spice level, budget, time, distance, and opening hours. The app state lists the restaurants open right now: prefer those for dine-in or pickup now, and use the weekly hours for later plans. Allergen information is not verified, so suggest checking with the restaurant when allergies come up.
 
-Each dish's first tag is its course: Appetizer, Main, Dessert, or Drink. A "Best seller" tag marks a restaurant's most popular items. When planning a meal, give each person a main; suggest drinks, appetizers, or desserts as optional extras unless the customer asks for them.
+Each dish's first tag is its course: Appetizer, Main, Dessert, or Drink. A "Best seller" tag marks a restaurant's most popular items, and a meal-time tag such as "Breakfast · 7–11:30 AM" means the dish is only served then. When planning a meal for a group, choose one restaurant so everyone eats together and give each person a main; suggest drinks, appetizers, or desserts as optional extras unless the customer asks for them.
 
 Reply in the language the customer writes in (Vietnamese or English). Keep replies to 1-3 short sentences of plain text without markdown."""
 
@@ -149,6 +173,23 @@ class Assistant:
             raise InvalidRequest("Menu is missing.")
         by_id = {dish["id"]: dish for dish in menu}
 
+        restaurants = []
+        for item in (payload.get("restaurants") or [])[:50]:
+            if not isinstance(item, dict) or not item.get("id"):
+                continue
+            try:
+                distance = round(float(item.get("distance")), 1)
+            except (TypeError, ValueError):
+                distance = None
+            restaurants.append({
+                "id": _clean_text(item.get("id"), 60),
+                "name": _clean_text(item.get("name"), 80),
+                "cuisine": _clean_text(item.get("cuisine"), 60),
+                "distance": distance,
+                "hours": _clean_text(item.get("hours"), 400),
+            })
+        restaurants_by_id = {restaurant["id"]: restaurant for restaurant in restaurants}
+
         history = []
         for message in (payload.get("messages") or [])[-MAX_HISTORY_MESSAGES:]:
             if not isinstance(message, dict) or message.get("role") not in {"user", "assistant"}:
@@ -172,16 +213,23 @@ class Assistant:
                     cart[line["dishId"]] = cart.get(line["dishId"], 0) + quantity
 
         context = payload.get("context") if isinstance(payload.get("context"), dict) else {}
-        return menu, by_id, history, cart, context
+        return menu, by_id, restaurants, restaurants_by_id, history, cart, context
 
     @staticmethod
-    def _menu_block(menu):
+    def _menu_block(menu, restaurants):
         lines = [
             f"{d['id']} | {d['name']} | {d['restaurant']} | {d['cuisine']} | {_money(d['price'])} | {d['prep']} min | "
             f"{d['diet']} | {d['spicy']} | {d['rating']} ({d['ratingCount']}) | {d['tags']}"
             for d in menu
         ]
-        return "Menu (id | dish | restaurant | cuisine | price | prep | diet | spice 0-2 | rating (count) | tags):\n" + "\n".join(lines)
+        block = "Menu (id | dish | restaurant | cuisine | price | prep | diet | spice 0-2 | rating (count) | tags):\n" + "\n".join(lines)
+        if restaurants:
+            rows = []
+            for r in restaurants:
+                distance = "" if r["distance"] is None else f"{r['distance']:g} mi"
+                rows.append(f"{r['id']} | {r['name']} | {r['cuisine']} | {distance} | {r['hours']}")
+            block += "\n\nRestaurants (id | name | cuisine | distance from the customer | weekly hours, local time):\n" + "\n".join(rows)
+        return block
 
     @staticmethod
     def _cart_summary(cart, by_id):
@@ -191,8 +239,8 @@ class Assistant:
         subtotal = sum(by_id[dish_id]["price"] * qty for dish_id, qty in cart.items())
         return "Order: " + "; ".join(lines) + f". Food subtotal {_money(subtotal)} before fees and tax."
 
-    def _app_state(self, cart, by_id, context):
-        mode = "pickup" if context.get("mode") == "pickup" else "delivery"
+    def _app_state(self, cart, by_id, restaurants_by_id, context):
+        mode = MODES.get(context.get("mode"), MODES["dinein"])
         state = _clean_text(context.get("state"), 4) or "unknown"
         try:
             tax_rate = float(context.get("taxRate"))
@@ -203,10 +251,16 @@ class Assistant:
             budget = _money(float(context.get("budget")))
         except (TypeError, ValueError):
             budget = "not set"
-        return (f"App state now. Fulfillment: {mode}. Sales tax: {tax}. Customer budget: {budget}. "
+        local_time = _clean_text(context.get("localTime"), 60) or "unknown"
+        today = _clean_text(context.get("today"), 10)
+        open_ids = context.get("openNow") if isinstance(context.get("openNow"), list) else []
+        open_names = [restaurants_by_id[str(rid)]["name"] for rid in open_ids[:50] if str(rid) in restaurants_by_id]
+        open_now = ", ".join(open_names) if open_names else "none"
+        return (f"App state now. Local time: {local_time}{f' (today is {today})' if DATE_RE.match(today or '') else ''}. "
+                f"How the customer is eating: {mode}. Open right now: {open_now}. Sales tax: {tax}. Customer budget: {budget}. "
                 + self._cart_summary(cart, by_id))
 
-    def _run_tool(self, name, data, cart, by_id, actions, mode_holder):
+    def _run_tool(self, name, data, cart, by_id, restaurants_by_id, actions, mode_holder):
         if name == "add_to_cart":
             dish = by_id.get(str(data.get("dish_id")))
             if not dish:
@@ -237,23 +291,52 @@ class Assistant:
             actions.append({"type": "show", "dishIds": ids})
             return "Shown to the customer: " + ", ".join(by_id[dish_id]["name"] for dish_id in ids), False
         if name == "set_fulfillment":
-            mode = "pickup" if data.get("mode") == "pickup" else "delivery"
+            mode = str(data.get("mode"))
+            if mode not in MODES:
+                return "Use dinein, reservation, or pickup. SmartFoodie has no delivery.", True
             mode_holder["mode"] = mode
             actions.append({"type": "mode", "mode": mode})
-            return f"Switched to {mode}.", False
+            return f"Switched to {MODES[mode]}.", False
+        if name == "book_table":
+            restaurant_id = data.get("restaurant_id")
+            if restaurant_id is not None and str(restaurant_id) not in restaurants_by_id:
+                return "Unknown restaurant_id. Use an id from the restaurant list, or null.", True
+            party = max(1, min(12, int(data.get("party_size") or 2)))
+            date = data.get("date")
+            if date is not None and not DATE_RE.match(str(date)):
+                return "date must be YYYY-MM-DD or null.", True
+            minutes = None
+            if data.get("time") is not None:
+                match = TIME_RE.match(str(data.get("time")))
+                if not match:
+                    return "time must be 24-hour HH:MM or null.", True
+                minutes = int(match.group(1)) * 60 + int(match.group(2))
+            mode_holder["mode"] = "reservation"
+            actions.append({"type": "mode", "mode": "reservation"})
+            actions.append({"type": "reserve", "restaurantId": restaurant_id, "party": party, "date": date, "minutes": minutes})
+            where = restaurants_by_id[str(restaurant_id)]["name"] if restaurant_id is not None else "a restaurant the customer picks"
+            when = (f" on {date}" if date else "") + (f" at {data['time']}" if minutes is not None else "")
+            return (f"The booking form is open for {party} at {where}{when}. "
+                    "If that time isn't open, the form selects the closest one. The customer confirms the booking."), False
+        if name == "open_screen":
+            screen = str(data.get("screen"))
+            if screen not in SCREENS:
+                return "Use orders, check_in, or split_bill.", True
+            actions.append({"type": SCREENS[screen]})
+            return f"Opened {screen.replace('_', ' ')} for the customer.", False
         if name == "open_checkout":
-            if not cart:
+            if not cart and mode_holder.get("mode") != "reservation":
                 return "The order is empty, so checkout cannot open yet.", True
             actions.append({"type": "checkout"})
-            return "Checkout is open. The customer reviews the total with tax and places the order themselves.", False
+            return "Checkout is open. The customer reviews the total with tax and confirms themselves.", False
         return f"Unknown tool {name}.", True
 
     def reply(self, payload):
-        menu, by_id, history, cart, context = self._parse(payload)
-        system = [{"type": "text", "text": SYSTEM_PROMPT + "\n\n" + self._menu_block(menu), "cache_control": {"type": "ephemeral"}}]
-        # Current cart and settings go in a mid-conversation system message after the newest
+        menu, by_id, restaurants, restaurants_by_id, history, cart, context = self._parse(payload)
+        system = [{"type": "text", "text": SYSTEM_PROMPT + "\n\n" + self._menu_block(menu, restaurants), "cache_control": {"type": "ephemeral"}}]
+        # Current cart, time, and settings go in a mid-conversation system message after the newest
         # customer message, so the cached system prompt and earlier turns stay unchanged.
-        messages = [*history, {"role": "system", "content": self._app_state(cart, by_id, context)}]
+        messages = [*history, {"role": "system", "content": self._app_state(cart, by_id, restaurants_by_id, context)}]
         actions = []
         mode_holder = {"mode": context.get("mode")}
         response = None
@@ -277,7 +360,7 @@ class Assistant:
             results = []
             for block in tool_uses:
                 try:
-                    content, is_error = self._run_tool(block.name, block.input or {}, cart, by_id, actions, mode_holder)
+                    content, is_error = self._run_tool(block.name, block.input or {}, cart, by_id, restaurants_by_id, actions, mode_holder)
                 except (TypeError, ValueError) as error:
                     content, is_error = f"Invalid input: {error}", True
                 result = {"type": "tool_result", "tool_use_id": block.id, "content": content}

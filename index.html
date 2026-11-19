@@ -4,12 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="SmartFoodie: order from local favorites, filter by cuisine, and let the AI assistant build your order with tax included." />
+  <meta name="description" content="SmartFoodie: dine in, book a table for your group, or order ahead for pickup. See opening hours, prep times, and reviews, check in together, and split the bill." />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <title>SmartFoodie — Order food you'll love</title>
+  <title>SmartFoodie — Dine in, book a table, or pick up</title>
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,16 +35,27 @@
       <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
       <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2.5 13.9 8 19.5 10l-5.6 2L12 17.5 10.1 12 4.5 10l5.6-2ZM18.5 15l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9Z" fill="currentColor"/></symbol>
       <symbol id="i-qr" viewBox="0 0 24 24"><path d="M4 4h6v6H4ZM14 4h6v6h-6ZM4 14h6v6H4Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 14h2v2h-2ZM18 18h2v2h-2ZM18 14h2v2h-2ZM14 18h2v2h-2Z" fill="currentColor"/></symbol>
       <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.1a4.3 4.3 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
       <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-5.5 16-3-6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
       <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-      <symbol id="i-scooter" viewBox="0 0 24 24"><circle cx="6" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 17h7M14 6h2.5l2 8.5M13 11h-5l-2 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16v.5a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 10ZM5.5 12.5V20h13v-7.5M10 20v-4.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
       <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3ZM9 8h6M9 12h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+      <symbol id="i-dine" viewBox="0 0 24 24"><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-2 1.3-3 3.8-3 7v4h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.2a6.5 6.5 0 0 1 3.5 5.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.3 2.4-5.2 3.6-8.3.4 1.7 1.3 2.8 2.4 3.4.3-3.3 1.7-5.7 3.5-6.9-.4 2.9.8 4.6 2 6.2 1 1.4 1.5 2.9 1.5 4.6 0 4-2.6 7.2-6.5 7.2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.5h6.8L17 8h3v11H4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+      <symbol id="i-split" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2" fill="currentColor"/><circle cx="12" cy="18.5" r="2" fill="currentColor"/><path d="M4.5 12h15" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+      <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13.5" cy="4.5" r="2" fill="currentColor"/><path d="m10 21 2.2-6.2 2.8 2.7V21M7.5 12.5 9.3 8.4l3.6-1.1 2.1 3.6 2.6 1.1M12.2 14.8 10.6 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 8 12 3.5 16.5 8M5 13v6.5h14V13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 8.5v-3A1.5 1.5 0 0 0 14 4H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+      <symbol id="i-checkin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m8 12.3 2.8 2.8L16.2 9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5h7.7l9.3 9.3-7.7 7.7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="9" r="1.6" fill="currentColor"/></symbol>
     </defs>
   </svg>
 
@@ -52,20 +64,17 @@
   <header class="topbar" id="top">
     <div class="topbar-inner">
       <a class="brand" href="#top" aria-label="SmartFoodie home"><span class="brand-mark">s.</span><span class="brand-name">SmartFoodie<i>.</i></span></a>
-      <div class="mode-toggle" role="group" aria-label="Order type">
-        <button type="button" data-mode="delivery" aria-pressed="true">Delivery</button>
-        <button type="button" data-mode="pickup" aria-pressed="false">Pickup</button>
-      </div>
       <button type="button" class="address-chip" id="addressChip" aria-label="Set your ZIP code for tax and nearby restaurants">
         <svg class="icon"><use href="#i-pin"/></svg><span id="addressLabel">Set ZIP</span>
       </button>
       <div class="search" id="globalSearch">
         <svg class="icon search-icon"><use href="#i-search"/></svg>
-        <input id="searchInput" type="search" placeholder="Search dishes, restaurants, or cuisines" autocomplete="off" spellcheck="false"
+        <input id="searchInput" type="search" placeholder="Search dishes, e.g. pho under $15" autocomplete="off" spellcheck="false"
           role="combobox" aria-label="Search dishes, restaurants, or cuisines" aria-autocomplete="list" aria-expanded="false" aria-controls="searchResults" enterkeyhint="search">
         <kbd class="search-kbd" aria-hidden="true">/</kbd>
         <div class="search-results" id="searchResults" role="listbox" aria-label="Search suggestions" hidden></div>
       </div>
+      <button type="button" class="icon-button orders-button" id="ordersButton" data-open-orders aria-label="Your orders and reservations"><svg class="icon"><use href="#i-receipt"/></svg><span class="orders-badge" id="ordersBadge" hidden>0</span></button>
       <button type="button" class="icon-button share-button" id="openShareQr" aria-label="Share SmartFoodie"><svg class="icon"><use href="#i-qr"/></svg></button>
       <button type="button" class="cart-button" id="cartButton" aria-label="Open your order">
         <svg class="icon"><use href="#i-bag"/></svg><span class="cart-count" id="cartCount">0</span><span class="cart-button-total" id="cartButtonTotal"></span>
@@ -73,57 +82,105 @@
     </div>
   </header>
 
-  <nav class="category-rail" aria-label="Filter by cuisine">
-    <div class="rail-scroll" id="categoryRail" role="tablist"></div>
-  </nav>
-
   <main id="main">
-    <section class="promo-row" aria-label="Highlights">
-      <button type="button" class="promo-card promo-ai" data-promo="ai">
-        <span class="promo-eyebrow"><svg class="icon"><use href="#i-spark"/></svg> AI ordering assistant</span>
-        <strong>Just say what you're craving</strong>
-        <span class="promo-text">"Dinner for 3 under $50" or "thêm 2 phở". It builds the order and shows the total with tax.</span>
-        <span class="promo-cta">Ask AI</span>
-      </button>
-      <button type="button" class="promo-card promo-new" data-promo="new">
-        <span class="promo-eyebrow">Just added</span>
-        <strong>20 new dishes</strong>
-        <span class="promo-text">Ramen, biryani, soup dumplings, paella, and more, with photos, ratings, and reviews.</span>
-        <span class="promo-cta">See what's new</span>
-      </button>
-      <button type="button" class="promo-card promo-near" data-promo="nearby">
-        <span class="promo-eyebrow"><svg class="icon"><use href="#i-pin"/></svg> Real places around you</span>
-        <strong>Restaurants near you</strong>
-        <span class="promo-text">Search by ZIP or your location and see places on a live map.</span>
-        <span class="promo-cta">Open map</span>
-      </button>
+    <section class="mode-hero" aria-labelledby="heroTitle">
+      <div class="hero-text">
+        <h1 id="heroTitle">How are you eating today?</h1>
+        <p>Dine in, book a table for your group, or order ahead and pick up between classes. Check in together and split the bill when you're done.</p>
+      </div>
+      <div class="mode-cards" role="group" aria-label="How do you want to eat?">
+        <button type="button" class="mode-card" data-mode="dinein" aria-pressed="true">
+          <span class="mode-card-icon"><svg class="icon"><use href="#i-dine"/></svg></span>
+          <span class="mode-card-text"><strong data-mode-label="dinein">Dine-in</strong><span>Order from your phone, check in with your group, and get served at your table.</span></span>
+        </button>
+        <button type="button" class="mode-card" data-mode="reservation" aria-pressed="false">
+          <span class="mode-card-icon"><svg class="icon"><use href="#i-calendar"/></svg></span>
+          <span class="mode-card-text"><strong data-mode-label="reservation">Reservation</strong><span>Book a table for later and pre-order, so your food is ready when you sit down.</span></span>
+        </button>
+        <button type="button" class="mode-card" data-mode="pickup" aria-pressed="false">
+          <span class="mode-card-icon"><svg class="icon"><use href="#i-bag"/></svg></span>
+          <span class="mode-card-text"><strong data-mode-label="pickup">Pickup</strong><span>Order ahead, skip the line, and choose a pickup time that fits your schedule.</span></span>
+        </button>
+      </div>
+      <div class="hero-links">
+        <button type="button" class="chip" data-ai-open><svg class="icon"><use href="#i-spark"/></svg> Ask AI</button>
+        <button type="button" class="chip" data-split-bill><svg class="icon"><use href="#i-split"/></svg> Split a bill</button>
+        <button type="button" class="chip" data-open-orders><svg class="icon"><use href="#i-receipt"/></svg> Your orders</button>
+        <a class="chip" href="#nearby"><svg class="icon"><use href="#i-pin"/></svg> Map of places near you</a>
+      </div>
     </section>
 
-    <div class="filter-bar" id="filterBar" role="group" aria-label="Refine dishes">
+    <section class="section upcoming" id="upcoming" aria-labelledby="upcomingTitle" hidden>
+      <div class="section-head">
+        <div><h2 id="upcomingTitle">Coming up</h2><p class="section-sub">Check in when your group arrives, or see when your order is ready.</p></div>
+        <button type="button" class="button button-secondary" data-open-orders>All orders</button>
+      </div>
+      <div class="h-scroller upcoming-row" id="upcomingRow"></div>
+    </section>
+
+    <div class="filter-bar" id="filterBar" role="group" aria-label="Refine dishes and restaurants">
       <label class="sort-select"><span class="sr-only">Sort dishes</span>
         <select id="sortSelect">
           <option value="recommended">Sort: Recommended</option>
+          <option value="nearest">Sort: Nearest</option>
           <option value="rating">Sort: Highest rated</option>
           <option value="price">Sort: Price, low to high</option>
           <option value="fastest">Sort: Fastest</option>
+          <option value="popular">Sort: Most ordered today</option>
         </select>
       </label>
+      <button type="button" class="chip" id="priceButton" aria-expanded="false" aria-controls="pricePanel"><svg class="icon"><use href="#i-tag"/></svg> <span id="priceLabel">Price</span> <svg class="icon"><use href="#i-down"/></svg></button>
+      <label class="sort-select"><span class="sr-only">Distance from you</span>
+        <select id="radiusSelect">
+          <option value="0">Any distance</option>
+          <option value="0.5">Within 0.5 mi</option>
+          <option value="1">Within 1 mi</option>
+          <option value="2">Within 2 mi</option>
+          <option value="5">Within 5 mi</option>
+        </select>
+      </label>
+      <button type="button" class="chip" data-chip="open" aria-pressed="false"><svg class="icon"><use href="#i-store"/></svg> Open now</button>
+      <button type="button" class="chip" data-chip="fast" aria-pressed="false"><svg class="icon"><use href="#i-clock"/></svg> Ready in 15 min</button>
       <button type="button" class="chip" data-chip="top" aria-pressed="false"><svg class="icon"><use href="#i-star"/></svg> 4.8+</button>
-      <button type="button" class="chip" data-chip="under15" aria-pressed="false">Under $15</button>
-      <button type="button" class="chip" data-chip="fast" aria-pressed="false"><svg class="icon"><use href="#i-clock"/></svg> 15 min or less</button>
       <button type="button" class="chip" data-chip="vegetarian" aria-pressed="false">Vegetarian</button>
       <button type="button" class="chip" data-chip="spicy" aria-pressed="false">Spicy</button>
       <button type="button" class="chip" data-chip="new" aria-pressed="false">New</button>
       <button type="button" class="chip" data-chip="best" aria-pressed="false">Best sellers</button>
       <button type="button" class="chip chip-clear" id="clearFilters" hidden>Clear all</button>
     </div>
+    <div class="price-panel" id="pricePanel" role="group" aria-label="Price range" hidden>
+      <div class="chip-group" role="group" aria-label="Price presets">
+        <button type="button" class="chip" data-price="0-10" aria-pressed="false">Under $10</button>
+        <button type="button" class="chip" data-price="10-15" aria-pressed="false">$10–$15</button>
+        <button type="button" class="chip" data-price="15-20" aria-pressed="false">$15–$20</button>
+        <button type="button" class="chip" data-price="20-30" aria-pressed="false">$20 and up</button>
+        <button type="button" class="chip" data-price="0-30" aria-pressed="true">Any price</button>
+      </div>
+      <div class="price-sliders">
+        <label class="range-field"><span>Lowest price <b id="priceMinOut">$0</b></span><input type="range" id="priceMin" min="0" max="30" step="1" value="0"></label>
+        <label class="range-field"><span>Highest price <b id="priceMaxOut">No limit</b></span><input type="range" id="priceMax" min="0" max="30" step="1" value="30"></label>
+      </div>
+    </div>
 
     <section class="section" id="restaurants" aria-labelledby="restaurantsTitle">
       <div class="section-head">
-        <div><h2 id="restaurantsTitle">Featured restaurants</h2><p class="section-sub" id="restaurantsSub">Tap a restaurant to see its full menu and reviews.</p></div>
+        <div><h2 id="restaurantsTitle">Restaurants</h2><p class="section-sub" id="restaurantsSub"></p></div>
         <div class="scroller-nav"><button type="button" class="round-button" data-scroll="restaurantRow" data-dir="-1" aria-label="Scroll restaurants left"><svg class="icon"><use href="#i-left"/></svg></button><button type="button" class="round-button" data-scroll="restaurantRow" data-dir="1" aria-label="Scroll restaurants right"><svg class="icon"><use href="#i-right"/></svg></button></div>
       </div>
-      <div class="h-scroller" id="restaurantRow"></div>
+      <div class="h-scroller rest-row" id="restaurantRow"></div>
+      <div class="empty-state" id="restaurantEmpty" hidden>
+        <strong>No restaurants match</strong>
+        <p>Try a larger distance, a different price, or turn off Open now.</p>
+      </div>
+    </section>
+
+    <section class="section" id="feed" aria-labelledby="feedTitle">
+      <div class="section-head">
+        <div><h2 id="feedTitle">Fresh photos and reviews</h2><p class="section-sub">What people ate today and this week. Rate your own meals from Your orders.</p></div>
+        <div class="scroller-nav"><button type="button" class="round-button" data-scroll="feedRow" data-dir="-1" aria-label="Scroll reviews left"><svg class="icon"><use href="#i-left"/></svg></button><button type="button" class="round-button" data-scroll="feedRow" data-dir="1" aria-label="Scroll reviews right"><svg class="icon"><use href="#i-right"/></svg></button></div>
+      </div>
+      <div class="h-scroller feed-row" id="feedRow"></div>
+      <p class="sample-note">Reviews from other diners are sample data for this demo. Your own reviews and photos stay on this device.</p>
     </section>
 
     <section class="section" id="new-dishes" aria-labelledby="newTitle">
@@ -141,14 +198,14 @@
       <div class="course-rows" id="dishRows"></div>
       <div class="empty-state" id="dishEmpty" hidden>
         <strong>No dishes match these filters</strong>
-        <p>Try another cuisine, remove a filter, or ask the AI assistant for ideas.</p>
+        <p id="dishEmptyText">Try another cuisine, remove a filter, or ask the AI assistant for ideas.</p>
         <button type="button" class="button button-secondary" id="emptyClear">Clear filters</button>
       </div>
     </section>
 
     <section class="section nearby-section" id="nearby" aria-labelledby="nearbyTitle">
       <div class="section-head">
-        <div><h2 id="nearbyTitle">Restaurants near you</h2><p class="section-sub">Real places from OpenStreetMap. Enter a ZIP code or city, or use your location.</p></div>
+        <div><h2 id="nearbyTitle">Real restaurants near you</h2><p class="section-sub">Places from OpenStreetMap with hours, reservations, and takeout when listed. Enter a ZIP code or city, or use your location.</p></div>
         <span class="count-pill" id="nearbyCount">0 places</span>
       </div>
       <div class="nearby-controls">
@@ -165,6 +222,11 @@
           <button type="button" class="chip" aria-pressed="false" data-type="restaurant">Restaurants <span>0</span></button>
           <button type="button" class="chip" aria-pressed="false" data-type="fast_food">Fast food <span>0</span></button>
           <button type="button" class="chip" aria-pressed="false" data-type="cafe">Cafés <span>0</span></button>
+        </div>
+        <div class="chip-group" id="nearbyFeatures" role="group" aria-label="Filter nearby places by service">
+          <button type="button" class="chip" aria-pressed="false" data-feature="reservations"><svg class="icon"><use href="#i-calendar"/></svg> Takes reservations</button>
+          <button type="button" class="chip" aria-pressed="false" data-feature="takeout"><svg class="icon"><use href="#i-bag"/></svg> Takeout</button>
+          <button type="button" class="chip" aria-pressed="false" data-feature="hours"><svg class="icon"><use href="#i-clock"/></svg> Hours listed</button>
         </div>
         <label class="field field-compact"><svg class="icon"><use href="#i-search"/></svg><input id="nearbyFilterText" type="search" placeholder="Filter by name or cuisine" aria-label="Filter nearby places by name or cuisine"></label>
       </div>
@@ -197,7 +259,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <a class="brand" href="#top"><span class="brand-mark">s.</span><span class="brand-name">SmartFoodie<i>.</i></span></a>
-      <p>Demo website: restaurant names, menus, prices, ratings, and customer reviews are sample data. Orders are not sent to restaurants and no payment is taken. Sales tax is estimated from statewide base rates for prepared food; local taxes may apply.</p>
+      <p>Demo website: restaurant names, menus, prices, opening hours, distances, prep times, "ordered today" counts, ratings, and other diners' reviews are sample data. Orders and reservations are not sent to restaurants and no payment is taken. Sales tax is estimated from statewide base rates for prepared food; local taxes may apply.</p>
     </div>
   </footer>
 
@@ -223,73 +285,100 @@
     <div class="drawer-foot" id="cartFoot"></div>
   </dialog>
 
-  <!-- Checkout -->
+  <!-- Checkout: dine-in, reservation, or pickup -->
   <dialog class="modal checkout-modal" id="checkoutDialog" aria-labelledby="checkoutTitle">
     <button type="button" class="modal-close" data-close aria-label="Close checkout"><svg class="icon"><use href="#i-close"/></svg></button>
     <form class="checkout" id="checkoutForm" novalidate>
       <div class="checkout-main">
         <h2 id="checkoutTitle">Checkout</h2>
         <fieldset class="checkout-block">
-          <legend>How do you want it?</legend>
-          <div class="segmented" role="group" aria-label="Order type">
-            <button type="button" data-checkout-mode="delivery"><svg class="icon"><use href="#i-scooter"/></svg> Delivery</button>
-            <button type="button" data-checkout-mode="pickup"><svg class="icon"><use href="#i-store"/></svg> Pickup</button>
+          <legend>How are you eating?</legend>
+          <div class="segmented segmented-3" role="group" aria-label="How are you eating?">
+            <button type="button" data-mode="dinein"><svg class="icon"><use href="#i-dine"/></svg> <span data-mode-label="dinein">Dine-in</span></button>
+            <button type="button" data-mode="reservation"><svg class="icon"><use href="#i-calendar"/></svg> <span data-mode-label="reservation">Reservation</span></button>
+            <button type="button" data-mode="pickup"><svg class="icon"><use href="#i-bag"/></svg> <span data-mode-label="pickup">Pickup</span></button>
           </div>
         </fieldset>
-        <fieldset class="checkout-block" id="deliveryFields">
-          <legend>Delivery address</legend>
-          <div class="form-grid">
-            <label class="form-field span-2"><span>Street address</span><input id="checkoutStreet" autocomplete="street-address" placeholder="123 Main St, Apt 4"></label>
-            <label class="form-field"><span>ZIP code</span><input id="checkoutZip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="94103"></label>
-            <label class="form-field"><span>State (for tax)</span><select id="checkoutState"></select></label>
-            <label class="form-field span-2"><span>Note for the driver <small>(optional)</small></span><input id="checkoutNote" placeholder="Gate code, leave at door…"></label>
-          </div>
-          <p class="field-hint" id="zipHint" aria-live="polite"></p>
-        </fieldset>
-        <fieldset class="checkout-block" id="pickupFields" hidden>
-          <legend>Pickup</legend>
-          <div class="form-grid">
-            <label class="form-field"><span>State (for tax)</span><select id="pickupState"></select></label>
-          </div>
-          <p class="field-hint" id="pickupInfo"></p>
-        </fieldset>
+        <div id="checkoutModeFields"></div>
         <fieldset class="checkout-block" id="tipFields">
-          <legend>Tip your driver</legend>
-          <div class="tip-options" id="tipOptions" role="group" aria-label="Tip amount"></div>
-          <p class="field-hint">100% of the tip goes to your driver. You can change it before placing the order.</p>
+          <legend id="tipLegend">Tip</legend>
+          <div class="tip-options" id="tipOptions" role="group" aria-labelledby="tipLegend"></div>
+          <p class="field-hint" id="tipNote"></p>
         </fieldset>
+        <fieldset class="checkout-block" id="splitFields"></fieldset>
         <fieldset class="checkout-block">
           <legend>Payment</legend>
-          <div class="pay-demo"><svg class="icon"><use href="#i-check"/></svg><div><strong>Pay at the door or counter</strong><small>Demo checkout. No card details are collected and nothing is charged.</small></div></div>
+          <div class="pay-demo"><svg class="icon"><use href="#i-check"/></svg><div><strong>Pay at the restaurant</strong><small>Demo checkout. No card details are collected and nothing is charged.</small></div></div>
         </fieldset>
       </div>
       <aside class="checkout-summary">
-        <h3>Order summary</h3>
+        <h3 id="summaryTitle">Order summary</h3>
         <div id="checkoutItems" class="summary-items"></div>
         <div id="checkoutTotals" class="totals"></div>
-        <p class="form-error" id="checkoutError" role="alert" hidden></p>
+        <div id="checkoutShares"></div>
+        <div class="form-error" id="checkoutError" role="alert" hidden></div>
         <button type="submit" class="button button-primary button-block" id="placeOrderButton">Place order</button>
-        <p class="fine-print">Sales tax uses the statewide base rate for prepared food on your food subtotal. Local taxes may make the final amount slightly higher.</p>
+        <p class="fine-print" id="taxNote">Sales tax uses the statewide base rate for prepared food on your food subtotal. Local taxes may make the final amount slightly higher.</p>
       </aside>
     </form>
+    <!-- On phones the summary sits below the form, so this bar keeps the button in reach. -->
+    <div class="checkout-bar"><button type="submit" form="checkoutForm" class="button button-primary button-block" id="checkoutBarButton">Place order</button></div>
   </dialog>
 
-  <!-- Order confirmation -->
-  <dialog class="modal confirm-modal" id="confirmDialog" aria-labelledby="confirmTitle">
+  <!-- One order: confirmation, status, check-in code, and actions -->
+  <dialog class="modal order-modal" id="orderDialog" aria-labelledby="orderTitle">
     <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
-    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-body" id="orderBody"></div>
+  </dialog>
+
+  <!-- Order history -->
+  <dialog class="modal orders-modal" id="ordersDialog" aria-labelledby="ordersTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body">
+      <h2 id="ordersTitle">Your orders</h2>
+      <p class="muted">Orders and reservations are saved on this device.</p>
+      <div class="segmented orders-tabs" role="tablist" aria-label="Order lists">
+        <button type="button" role="tab" id="ordersTabActive" aria-selected="true" aria-controls="ordersList" data-orders-tab="active">Upcoming</button>
+        <button type="button" role="tab" id="ordersTabPast" aria-selected="false" aria-controls="ordersList" data-orders-tab="past">Past</button>
+      </div>
+      <div id="ordersList" role="tabpanel" aria-labelledby="ordersTabActive"></div>
+    </div>
+  </dialog>
+
+  <!-- Group check-in -->
+  <dialog class="modal small-modal checkin-modal" id="checkinDialog" aria-labelledby="checkinTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body" id="checkinBody"></div>
+  </dialog>
+
+  <!-- Split the bill -->
+  <dialog class="modal split-modal" id="splitDialog" aria-labelledby="splitTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body" id="splitBody"></div>
+  </dialog>
+
+  <!-- Write a review -->
+  <dialog class="modal small-modal" id="reviewDialog" aria-labelledby="reviewTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <form class="modal-body review-form" id="reviewForm" novalidate></form>
+  </dialog>
+
+  <!-- A group link a friend opened -->
+  <dialog class="modal small-modal" id="groupDialog" aria-labelledby="groupTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body" id="groupBody"></div>
   </dialog>
 
   <!-- ZIP / tax location -->
   <dialog class="modal small-modal" id="addressDialog" aria-labelledby="addressTitle">
     <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
     <form class="modal-body address-form" id="addressForm">
-      <h2 id="addressTitle">Where are you ordering?</h2>
-      <p class="muted">Your ZIP code sets the sales tax and can search restaurants near you.</p>
+      <h2 id="addressTitle">Where are you?</h2>
+      <p class="muted">Your ZIP code sets the sales tax and can search real restaurants near you.</p>
       <label class="form-field"><span>ZIP code</span><input id="addressZip" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="94103"></label>
       <label class="form-field"><span>Or choose a state</span><select id="addressState"></select></label>
       <p class="field-hint" id="addressHint" aria-live="polite"></p>
-      <label class="check-row"><input type="checkbox" id="addressNearby" checked> Also show restaurants near this ZIP</label>
+      <label class="check-row"><input type="checkbox" id="addressNearby" checked> Also show real restaurants near this ZIP</label>
       <button type="submit" class="button button-primary button-block">Save</button>
     </form>
   </dialog>
@@ -319,7 +408,7 @@
     <div class="ai-suggestions" id="aiSuggestions"></div>
     <form class="ai-composer" id="aiForm">
       <label class="sr-only" for="aiInput">Message the AI assistant</label>
-      <input id="aiInput" autocomplete="off" placeholder='Try "add 2 pho" or "spicy under $15"' enterkeyhint="send">
+      <input id="aiInput" autocomplete="off" placeholder='Try "book a table for 4 at 7pm"' enterkeyhint="send">
       <button type="submit" class="ai-send" aria-label="Send"><svg class="icon"><use href="#i-send"/></svg></button>
     </form>
   </section>
@@ -329,8 +418,13 @@
   <script src="menu-data.js" defer></script>
   <script src="data.js" defer></script>
   <script src="pricing.js" defer></script>
+  <script src="schedule.js" defer></script>
+  <script src="search.js" defer></script>
+  <script src="split.js" defer></script>
   <script src="assistant.js" defer></script>
+  <script src="ui.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="orders.js" defer></script>
   <script src="healthy-foods.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
