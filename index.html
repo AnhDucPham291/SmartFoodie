@@ -8,8 +8,11 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SmartFoodie" />
+  <meta name="application-name" content="SmartFoodie" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <title>SmartFoodie — Dine in, book a table, or pick up</title>
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,6 +59,8 @@
       <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 8.5v-3A1.5 1.5 0 0 0 14 4H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
       <symbol id="i-checkin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m8 12.3 2.8 2.8L16.2 9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5h7.7l9.3 9.3-7.7 7.7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="9" r="1.6" fill="currentColor"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10.5 18h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-add-square" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
     </defs>
   </svg>
 
@@ -107,6 +112,7 @@
         <button type="button" class="chip" data-split-bill><svg class="icon"><use href="#i-split"/></svg> Split a bill</button>
         <button type="button" class="chip" data-open-orders><svg class="icon"><use href="#i-receipt"/></svg> Your orders</button>
         <a class="chip" href="#nearby"><svg class="icon"><use href="#i-pin"/></svg> Map of places near you</a>
+        <button type="button" class="chip" data-get-app><svg class="icon"><use href="#i-phone"/></svg> Get the app</button>
       </div>
     </section>
 
@@ -259,6 +265,11 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <a class="brand" href="#top"><span class="brand-mark">s.</span><span class="brand-name">SmartFoodie<i>.</i></span></a>
+      <button type="button" class="footer-app" data-get-app>
+        <img src="icons/apple-touch-icon.png" alt="" width="44" height="44" loading="lazy">
+        <span><strong>Get the SmartFoodie app</strong><small>Prefer an app? Add SmartFoodie to your Home Screen. It's free and doesn't need the App Store.</small></span>
+        <svg class="icon"><use href="#i-right"/></svg>
+      </button>
       <p>Demo website: restaurant names, menus, prices, opening hours, distances, prep times, "ordered today" counts, ratings, and other diners' reviews are sample data. Orders and reservations are not sent to restaurants and no payment is taken. Sales tax is estimated from statewide base rates for prepared food; local taxes may apply.</p>
     </div>
   </footer>
@@ -396,6 +407,19 @@
     </div>
   </dialog>
 
+  <!-- Get the app (steps are filled in by install.js for this device) -->
+  <dialog class="modal small-modal app-dialog" id="appDialog" aria-labelledby="appTitle">
+    <button type="button" class="modal-close" data-close aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="modal-body app-body">
+      <div class="app-head">
+        <img src="icons/apple-touch-icon.png" alt="" width="56" height="56" loading="lazy">
+        <h2 id="appTitle">Get the SmartFoodie app</h2>
+      </div>
+      <p class="muted">Keep using SmartFoodie in your browser, or add it to your Home Screen to open it full screen, like an app. It's free, doesn't need the App Store, and updates along with the website.</p>
+      <div class="app-steps-box" id="appSteps"></div>
+    </div>
+  </dialog>
+
   <!-- AI assistant -->
   <button type="button" class="ai-fab" id="aiFab" aria-controls="aiPanel" aria-expanded="false"><svg class="icon"><use href="#i-spark"/></svg><span>Ask AI</span></button>
   <section class="ai-panel" id="aiPanel" role="dialog" aria-modal="false" aria-labelledby="aiTitle" hidden>
@@ -425,6 +449,7 @@
   <script src="ui.js" defer></script>
   <script src="app.js" defer></script>
   <script src="orders.js" defer></script>
+  <script src="install.js" defer></script>
   <script src="healthy-foods.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>

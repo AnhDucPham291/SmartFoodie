@@ -12,6 +12,18 @@ python3 serve.py
 
 Open the `localhost` address printed in the terminal on this computer. The server also prints a Wi-Fi address for phones on the same network. Open that Wi-Fi address on this computer, select the **share** (QR) button, then scan the code with your phone. If port 8000 is busy, the server tries the next 19 ports. You can choose a starting port with `python3 serve.py --port 8100`.
 
+## Use it in the browser or as an app
+
+People can use SmartFoodie whichever way they prefer:
+
+- **In the browser:** open the link in Safari, Chrome, or any other browser. Nothing to install.
+- **As an app:** select **Get the app** (under the three ways to eat, or at the bottom of the page). SmartFoodie gets its own icon on the Home Screen and opens full screen, without the browser's address bar.
+  - **iPhone and iPad:** Apple doesn't let websites install themselves, so the site shows the steps: in Safari, tap **Share**, then **Add to Home Screen**, then **Add**. In apps like Zalo, Messenger, or Instagram, open the link in Safari first.
+  - **Android:** **Get the app** opens Chrome's **Install** prompt. In other browsers, open the browser menu and tap **Install app** or **Add to Home screen**.
+  - **Computer:** **Get the app** shows a QR code that opens the site on a phone. Chrome and Edge can also install it on the computer.
+
+The app and the website are the same files, so publishing an update changes both. On iPhone, the Home Screen app keeps its own saved orders and reservations, separate from Safari. Install it from the public GitHub Pages link: an app added from a `serve.py` address stops working when the server stops.
+
 ## What's on the site
 
 - **Three ways to eat** (header switch, the cards at the top, the order drawer, and checkout):
@@ -126,10 +138,12 @@ GitHub Pages hosts static files only, so the public site uses the on-device AI a
 | `ui.js` | Shared page helpers (photos, dialogs, toast, QR codes, sharing) |
 | `app.js` | Browsing, filters, search box, your order, checkout for dine-in, reservations, and pickup, and the assistant chat |
 | `orders.js` | Order history, order status, group check-in, bill splitting, reviews with photos, and group links |
+| `install.js` | The **Get the app** button: Home Screen steps for iPhone and iPad, the Install prompt on Android and computers, and a QR code to open the site on a phone |
 | `healthy-foods.js` | "World dishes to explore" section |
 | `nearby.js` | Map search for real nearby restaurants |
 | `serve.py` | Local server and the optional Claude assistant endpoint |
-| `sw.js`, `manifest.webmanifest` | Install-to-home-screen support and offline fallback |
+| `sw.js`, `manifest.webmanifest` | App name, icons, and full-screen mode for the installed app, plus an offline fallback |
+| `icons/` | App icons (`app-icon.svg` is the full-bleed source for `apple-touch-icon.png` and `icon-maskable-512.png`; `icon-192.png` and `icon-512.png` are `favicon.svg` as PNG) |
 
 Restaurant names, menus, prices, ratings, and reviews are sample data for the demo.
 

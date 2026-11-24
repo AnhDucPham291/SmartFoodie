@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smartfoodie-shell-v9';
+const CACHE_NAME = 'smartfoodie-shell-v10';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -13,10 +13,13 @@ const SHELL_FILES = [
   './ui.js',
   './app.js',
   './orders.js',
+  './install.js',
   './healthy-foods.js',
   './nearby.js',
   './manifest.webmanifest',
-  './favicon.svg'
+  './favicon.svg',
+  './icons/apple-touch-icon.png',
+  './icons/icon-192.png'
 ];
 
 self.addEventListener('install', event => {
